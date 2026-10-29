@@ -30,8 +30,18 @@ impl Tcp {
         }
     }
 
-    /// (Re)binds the listener for `lan`; on failure the error is kept for the window.
+    /// (Re)binds the listener for `lan`. When the LAN's bind fails, it falls back to
+    /// 127.0.0.1, so that local programs keep their access, records the LAN as off,
+    /// and keeps the error for the window.
     pub async fn set(&mut self, lan: bool) {
+        let error = self.bind(lan).await;
+        if lan && error.is_some() {
+            self.bind(false).await;
+        }
+        self.error = error;
+    }
+
+    async fn bind(&mut self, lan: bool) -> Option<String> {
         if let Some(t) = self.task.take() {
             t.abort();
             let _ = t.await;
@@ -39,8 +49,6 @@ impl Tcp {
         if let Some(d) = self.mdns.take() {
             let _ = d.shutdown();
         }
-        self.lan = lan;
-        self.error = None;
         let ip = if lan {
             Ipv4Addr::UNSPECIFIED
         } else {
@@ -49,18 +57,23 @@ impl Tcp {
         let addr = SocketAddr::from((ip, phonorheos_core::PORT));
         match tokio::net::TcpListener::bind(addr).await {
             Ok(listener) => {
+                self.lan = lan;
                 let core = self.core.clone();
                 self.task = Some(tokio::spawn(async move {
                     let _ = serve_tcp(core, listener, lan).await;
                 }));
-                if lan {
-                    match advertise() {
-                        Ok(d) => self.mdns = Some(d),
-                        Err(e) => self.error = Some(format!("not advertised on the LAN: {e}")),
-                    }
+                if lan && let Err(e) = advertise().map(|d| self.mdns = Some(d)) {
+                    return Some(format!("open to the LAN, but not advertised: {e}"));
                 }
+                None
             }
-            Err(e) => self.error = Some(format!("port {} is in use: {e}", phonorheos_core::PORT)),
+            Err(e) => {
+                self.lan = false;
+                Some(format!(
+                    "port {} could not be opened: {e}",
+                    phonorheos_core::PORT
+                ))
+            }
         }
     }
 }

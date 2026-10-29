@@ -47,10 +47,11 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
     }
 }
 
+/// Whether a control message is for this item; one meant for an earlier item, left
+/// unread because it came as that item ended, is not.
 fn is_for(c: &Control, item: &Item) -> bool {
     match c {
-        Control::Stop => true,
-        Control::Cancel(id) => *id == item.id,
+        Control::Stop(id) | Control::Cancel(id) => *id == item.id,
     }
 }
 

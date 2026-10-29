@@ -154,7 +154,12 @@ where
         .build_output_stream(
             config,
             move |out: &mut [T], _| {
-                let mut buffer = data.buffer.lock().expect("buffer lock");
+                // The device's thread must not wait: if the player holds the buffer at
+                // this instant, this period plays silence and the samples wait for the next.
+                let Ok(mut buffer) = data.buffer.try_lock() else {
+                    out.fill(T::from_sample(0.0));
+                    return;
+                };
                 for frame in out.chunks_mut(channels) {
                     let s = T::from_sample(buffer.pop_front().unwrap_or(0.0));
                     frame.fill(s);

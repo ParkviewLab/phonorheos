@@ -162,8 +162,12 @@ fn request(
         .map_err(|e| e.to_string())?;
     let mut raw = Vec::new();
     stream.read_to_end(&mut raw).map_err(|e| e.to_string())?;
-    let text = String::from_utf8_lossy(&raw);
-    let (head, rest) = text.split_once("\r\n\r\n").ok_or("malformed reply")?;
+    let split = raw
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .ok_or("malformed reply")?;
+    let head = String::from_utf8_lossy(&raw[..split]);
+    let body = &raw[split + 4..];
     let code = head
         .split_whitespace()
         .nth(1)
@@ -173,27 +177,29 @@ fn request(
         l.to_ascii_lowercase()
             .starts_with("transfer-encoding: chunked")
     });
-    Ok((
-        code,
-        if chunked {
-            dechunk(rest)
-        } else {
-            rest.to_string()
-        },
-    ))
+    let body = if chunked {
+        dechunk(body)
+    } else {
+        body.to_vec()
+    };
+    Ok((code, String::from_utf8_lossy(&body).into_owned()))
 }
 
-fn dechunk(mut s: &str) -> String {
-    let mut out = String::new();
-    while let Some((size, rest)) = s.split_once("\r\n") {
+/// The body of a chunked reply, put back together as bytes (a chunk may end inside a
+/// character, so decoding waits until the end).
+fn dechunk(mut s: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    while let Some(eol) = s.windows(2).position(|w| w == b"\r\n") {
+        let size = String::from_utf8_lossy(&s[..eol]);
         let Ok(n) = usize::from_str_radix(size.trim(), 16) else {
             break;
         };
+        let rest = &s[eol + 2..];
         if n == 0 || rest.len() < n {
             break;
         }
-        out.push_str(&rest[..n]);
-        s = rest[n..].trim_start_matches("\r\n");
+        out.extend_from_slice(&rest[..n]);
+        s = rest[n..].strip_prefix(b"\r\n").unwrap_or(&rest[n..]);
     }
     out
 }
@@ -229,8 +235,11 @@ mod tests {
     #[test]
     fn a_chunked_body_is_put_back_together() {
         assert_eq!(
-            dechunk("5\r\nhello\r\n6\r\n world\r\n0\r\n\r\n"),
-            "hello world"
+            dechunk(b"5\r\nhello\r\n6\r\n world\r\n0\r\n\r\n"),
+            b"hello world"
         );
+        // "naïve" with the chunk boundary inside the two bytes of "ï".
+        let split = b"3\r\nna\xc3\r\n3\r\n\xafve\r\n0\r\n\r\n";
+        assert_eq!(String::from_utf8(dechunk(split)).unwrap(), "naïve");
     }
 }

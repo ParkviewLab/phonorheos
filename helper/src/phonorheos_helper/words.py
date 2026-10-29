@@ -25,12 +25,19 @@ def phonemes_of(said_as: str, to_phonemes: Callable[[str], str]) -> str:
     return to_phonemes(s)
 
 
+def table(words: Mapping[str, str], to_phonemes: Callable[[str], str]) -> dict[str, str]:
+    """Each listed word, lowercased, and its phonemes; entries that would break the markup are left out."""
+    t = {w.lower(): phonemes_of(v, to_phonemes) for w, v in words.items() if w.strip() and v.strip()}
+    return {w: p for w, p in t.items() if p and "/" not in p and "]" not in p}
+
+
 def apply(text: str, words: Mapping[str, str], to_phonemes: Callable[[str], str]) -> str:
     """Replaces each listed word in `text` (whole words, any case) with misaki markup."""
-    if not words:
-        return text
-    table = {w.lower(): phonemes_of(v, to_phonemes) for w, v in words.items() if w.strip() and v.strip()}
-    table = {w: p for w, p in table.items() if p and "/" not in p and "]" not in p}
+    return apply_table(text, table(words, to_phonemes))
+
+
+def apply_table(text: str, table: Mapping[str, str]) -> str:
+    """As `apply`, with the phonemes already worked out by `table`."""
     if not table:
         return text
     names = sorted(table, key=len, reverse=True)
