@@ -63,8 +63,8 @@ impl Helper {
         let _ = self.requests.send(msg);
     }
 
-    pub fn speak(&self, id: &str, text: &str, voice: &str, speed: f32) {
-        self.send(json!({"op": "speak", "id": id, "text": text, "voice": voice, "speed": speed}));
+    pub fn speak(&self, id: &str, text: &str, voice: &str, speed: f32, by_clause: bool) {
+        self.send(json!({"op": "speak", "id": id, "text": text, "voice": voice, "speed": speed, "by_clause": by_clause}));
     }
 
     pub fn cancel(&self, id: &str) {

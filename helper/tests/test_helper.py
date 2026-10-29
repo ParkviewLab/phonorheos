@@ -22,7 +22,7 @@ class FakeVoice:
     def phonemes(self, text):
         return "p"
 
-    def speak(self, text, voice, speed):
+    def speak(self, text, voice, speed, by_clause=True):
         self.spoken.append((text, voice, speed))
         for _ in range(self.chunks):
             if self.gate:
@@ -84,7 +84,7 @@ def test_a_cancelled_item_stops_between_chunks_and_still_reports_done():
 
 def test_a_failure_is_reported_and_the_item_still_ends():
     class Broken(FakeVoice):
-        def speak(self, text, voice, speed):
+        def speak(self, text, voice, speed, by_clause=True):
             raise RuntimeError("no voice")
 
     ev, _ = events([{"op": "speak", "id": "a", "text": "x"}], Broken())

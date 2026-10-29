@@ -163,11 +163,13 @@ class Engine:
     def phonemes(self, text: str) -> str:
         return self._pipeline.g2p(text)[0]
 
-    def speak(self, text: str, voice: str, speed: float) -> Iterator[bytes]:
-        """The audio of `text` at 24 kHz, as 16-bit little-endian mono, one chunk per piece (see `chunks`)."""
+    def speak(self, text: str, voice: str, speed: float, by_clause: bool = True) -> Iterator[bytes]:
+        """The audio of `text` at 24 kHz, as 16-bit little-endian mono: one chunk per clause
+        (see `chunks`), or, when `by_clause` is off, the text handed to Kokoro whole."""
         import numpy as np  # ty: ignore[unresolved-import]
 
-        for result in self._pipeline(chunks.pieces(text), voice=voice, speed=speed):
+        text_or_pieces = chunks.pieces(text) if by_clause else text
+        for result in self._pipeline(text_or_pieces, voice=voice, speed=speed, split_pattern=r"\n+"):
             if result.audio is not None:
                 samples = np.clip(result.audio.numpy(), -1.0, 1.0)
                 yield (samples * 32767.0).astype("<i2").tobytes()
