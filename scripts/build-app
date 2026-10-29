@@ -1,0 +1,41 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Builds the installers into dist/: on macOS the app in a disk image
+# (phonorheos-<version>-macos-arm64.dmg), on Linux a .deb and an AppImage
+# (phonorheos-<version>-linux-amd64.*). The bundled Python is prepared first
+# (scripts/prepare-python) and the third-party notices generated. Signing on macOS:
+# SIGN_IDENTITY (CI sets the Developer ID identity), else the bundle is signed ad hoc.
+set -e
+cd "$(dirname "$0")/.."
+VERSION=$(tr -d '[:space:]' < VERSION.txt)
+# Tauri wants semver: 0.1.0.dev0 becomes 0.1.0-dev0.
+SEMVER=$(printf '%s' "$VERSION" | sed -E 's/\.dev([0-9]+)$/-dev\1/')
+APP=crates/phonorheos-app
+scripts/prepare-python
+case "$(uname)" in
+  Darwin) TARGET=aarch64-apple-darwin; OS=macos-arm64; BUNDLES=app,dmg ;;
+  Linux) TARGET=x86_64-unknown-linux-gnu; OS=linux-amd64; BUNDLES=deb,appimage ;;
+  *) echo "unsupported system: $(uname)" >&2; exit 1 ;;
+esac
+scripts/third-party-notices "$TARGET" "$APP/python" "$APP/THIRD-PARTY-NOTICES.txt"
+CONFIG=$(printf '{"version":"%s","bundle":{"resources":{"python/":"python/","THIRD-PARTY-NOTICES.txt":"THIRD-PARTY-NOTICES.txt"}}}' "$SEMVER")
+if [ "$(uname)" = Darwin ]; then
+  export APPLE_SIGNING_IDENTITY="${SIGN_IDENTITY:--}"
+else
+  # linuxdeploy does not follow the bundled libraries' $ORIGIN, and its strip
+  # fails on newer libraries' relocations.
+  LD_LIBRARY_PATH=$(find "$PWD/$APP/python" -name '*.so*' -type f -printf '%h\n' | sort -u | paste -sd:)
+  export LD_LIBRARY_PATH NO_STRIP=true
+fi
+(cd "$APP" && cargo tauri build --bundles "$BUNDLES" --config "$CONFIG")
+mkdir -p dist
+B=target/release/bundle
+case "$OS" in
+  macos-arm64) cp "$B"/dmg/*.dmg "dist/phonorheos-$VERSION-$OS.dmg" ;;
+  linux-amd64)
+    cp "$B"/deb/*.deb "dist/phonorheos-$VERSION-$OS.deb"
+    cp "$B"/appimage/*.AppImage "dist/phonorheos-$VERSION-$OS.AppImage" ;;
+esac
+ls -l dist
