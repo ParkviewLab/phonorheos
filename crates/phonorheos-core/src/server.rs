@@ -73,7 +73,8 @@ pub fn router(core: Arc<Core>, source: Source) -> Router {
         .route("/status", get(status))
         .route("/health", get(|| async { "ok" }))
         .layer(middleware::from_fn_with_state(ctx.clone(), check))
-        .layer(DefaultBodyLimit::max(64 * 1024))
+        // 20 000 characters, each up to four bytes or a six-character JSON escape.
+        .layer(DefaultBodyLimit::max(256 * 1024))
         .with_state(ctx)
 }
 
@@ -296,5 +297,6 @@ pub async fn serve_tcp(
     } else {
         Source::Loopback(port)
     };
-    axum::serve(listener, router(core, source)).await
+    let app = router(core, source).layer(Extension(LocalPort(port)));
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await
 }
