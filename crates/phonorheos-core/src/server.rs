@@ -13,7 +13,7 @@
 use crate::access::{self, Decision, Headers, Source};
 use crate::core::{Core, Request};
 use crate::events::Event;
-use axum::extract::{DefaultBodyLimit, Path, Query, Request as HttpRequest, State};
+use axum::extract::{ConnectInfo, DefaultBodyLimit, Path, Query, Request as HttpRequest, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::middleware::{self, Next};
 use axum::response::sse::{Event as SseEvent, KeepAlive, Sse};
@@ -24,6 +24,7 @@ use futures_util::stream::{self, Stream, StreamExt};
 use serde::Deserialize;
 use serde_json::json;
 use std::convert::Infallible;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::broadcast::error::RecvError;
@@ -36,6 +37,26 @@ struct Ctx {
     core: Arc<Core>,
     source: Source,
 }
+
+/// The source of a request on a listener that covers every interface: a caller on
+/// this machine (a loopback address) gets the loopback rules, any other the LAN's.
+fn source_of(ctx: &Ctx, req: &HttpRequest) -> Source {
+    match (
+        ctx.source,
+        req.extensions().get::<ConnectInfo<SocketAddr>>(),
+    ) {
+        (Source::Network, Some(ConnectInfo(peer))) if peer.ip().is_loopback() => Source::Loopback(
+            req.extensions()
+                .get::<LocalPort>()
+                .map_or(crate::PORT, |p| p.0),
+        ),
+        (source, _) => source,
+    }
+}
+
+/// The port a TCP listener serves on.
+#[derive(Clone, Copy)]
+struct LocalPort(u16);
 
 /// The name a LAN token gave the request, set by the access check.
 #[derive(Clone)]
@@ -70,7 +91,9 @@ async fn check(State(ctx): State<Ctx>, mut req: HttpRequest, next: Next) -> Resp
         sec_fetch_site: header(h, "sec-fetch-site"),
         authorization: header(h, "authorization"),
     };
-    match access::decide(ctx.source, &headers, &ctx.core.tokens()) {
+    let source = source_of(&ctx, &req);
+    req.extensions_mut().insert(source);
+    match access::decide(source, &headers, &ctx.core.tokens()) {
         Decision::Allow(name) => {
             req.extensions_mut().insert(TokenName(name));
             next.run(req).await
@@ -198,6 +221,7 @@ fn frame(e: &Event) -> SseEvent {
 async fn events(
     State(ctx): State<Ctx>,
     Extension(token): Extension<TokenName>,
+    Extension(source): Extension<Source>,
     headers: HeaderMap,
     Query(q): Query<EventsQuery>,
 ) -> Sse<impl Stream<Item = Result<SseEvent, Infallible>>> {
@@ -205,7 +229,7 @@ async fn events(
         .and_then(|v| v.trim().parse().ok())
         .or(q.last_id);
     let (replay, rx) = ctx.core.events().subscribe(after);
-    let via = match ctx.source {
+    let via = match source {
         Source::Socket => "socket",
         Source::Loopback(_) => "loopback",
         Source::Network => "network",

@@ -9,3 +9,4 @@ __pycache__/
 notarization.json
 .pytest_cache/
 .ruff_cache/
+crates/phonorheos-app/gen/

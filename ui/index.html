@@ -1,0 +1,84 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai> -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>phonorheos</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <span id="dot" class="dot"></span>
+  <strong id="state">Starting…</strong>
+  <span class="grow"></span>
+  <button id="stop" title="Silence everything now">Stop</button>
+  <button id="toggle-settings">Settings</button>
+</header>
+
+<main id="main">
+  <section>
+    <h2>Voice</h2>
+    <div class="row">
+      <select id="voice" aria-label="Voice"></select>
+      <label class="speed">Speed <input id="speed" type="range" min="0.5" max="2" step="0.05"> <span id="speed-value"></span></label>
+    </div>
+    <div class="row">
+      <input id="try-text" placeholder="Type something to hear it" aria-label="Text to speak">
+      <button id="try">Say it</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Queue</h2>
+    <ul id="queue" class="list"><li class="empty">Nothing to say.</li></ul>
+  </section>
+
+  <section>
+    <h2>Clients</h2>
+    <ul id="readers" class="list"><li class="empty">No clients connected.</li></ul>
+  </section>
+
+  <section>
+    <h2>Recently spoken</h2>
+    <ul id="recent" class="list"><li class="empty">Nothing yet.</li></ul>
+  </section>
+</main>
+
+<main id="settings" hidden>
+  <section>
+    <h2>Words</h2>
+    <p class="note">How listed words are said: a respelling in ordinary letters ("wuss ter"), or phonemes between slashes ("/fQnQ ɹˈiːQs/").</p>
+    <table id="words"></table>
+    <div class="row">
+      <input id="new-word" placeholder="Word" aria-label="Word">
+      <input id="new-said" placeholder="Said as" aria-label="Said as">
+      <button id="add-word">Add</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Network</h2>
+    <label class="check"><input id="lan" type="checkbox"> Open to the LAN, for clients holding a token (port <span id="port"></span>)</label>
+    <p id="lan-error" class="error" hidden></p>
+    <ul id="tokens" class="list"></ul>
+    <div class="row">
+      <input id="token-name" placeholder="Name of the machine or app" aria-label="Token name">
+      <button id="issue">Issue a token</button>
+    </div>
+    <p id="secret" class="secret" hidden></p>
+  </section>
+
+  <section>
+    <h2>Starting</h2>
+    <label class="check"><input id="autostart" type="checkbox"> Open phonorheos at login</label>
+  </section>
+
+  <section class="about">
+    <p>phonorheos <span id="version"></span> · socket <code id="socket"></code></p>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

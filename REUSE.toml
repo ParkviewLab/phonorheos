@@ -14,7 +14,14 @@ SPDX-License-Identifier = "CC-BY-4.0"
 
 # --- Code, build scripts, configs, version pin → AGPL-3.0-or-later ----------
 [[annotations]]
-path = ["LICENSE", "VERSION.txt", ".gitignore", ".github/**", "AGENTS.md", "CLAUDE.md", "Cargo.toml", "Cargo.lock", "crates/**/Cargo.toml", "helper/pyproject.toml", "helper/uv.lock", "helper/.python-version"]
+path = ["LICENSE", "VERSION.txt", ".gitignore", ".github/**", "AGENTS.md", "CLAUDE.md", "Cargo.toml", "Cargo.lock", "crates/**/Cargo.toml", "helper/pyproject.toml", "helper/uv.lock", "helper/.python-version", "crates/phonorheos-app/tauri.conf.json", "crates/phonorheos-app/capabilities/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Gary Frattarola <garyf@parkviewlab.ai>"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+# --- Brand marks: the app icon, its source and the files made from it → all rights reserved
+[[annotations]]
+path = ["brand/**", "crates/phonorheos-app/icons/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Gary Frattarola <garyf@parkviewlab.ai>"
+SPDX-License-Identifier = "LicenseRef-AllRightsReserved"
