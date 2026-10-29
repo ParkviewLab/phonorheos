@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Temporary: runs scripts/build-app on Ubuntu 24.04 for this branch; removed before merging.
+name: Package check
+on:
+  push:
+    branches: [feature-packaging]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev patchelf file libfuse2t64
+      - run: cargo install tauri-cli --version "^2" --locked
+      - run: scripts/build-app
+      - uses: actions/upload-artifact@v6
+        with:
+          name: package-linux
+          path: |
+            dist/*.deb
+            dist/*.AppImage
+          retention-days: 7
