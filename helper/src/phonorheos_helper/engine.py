@@ -20,6 +20,8 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
+from phonorheos_helper import chunks
+
 KOKORO = "hexgrad/Kokoro-82M"
 FALLBACK = {True: "PeterReid/graphemes_to_phonemes_en_gb", False: "PeterReid/graphemes_to_phonemes_en_us"}
 DEFAULT_VOICE = "bm_lewis"
@@ -162,10 +164,10 @@ class Engine:
         return self._pipeline.g2p(text)[0]
 
     def speak(self, text: str, voice: str, speed: float) -> Iterator[bytes]:
-        """The audio of `text` at 24 kHz, as 16-bit little-endian mono, one chunk per sentence group."""
+        """The audio of `text` at 24 kHz, as 16-bit little-endian mono, one chunk per piece (see `chunks`)."""
         import numpy as np  # ty: ignore[unresolved-import]
 
-        for result in self._pipeline(text, voice=voice, speed=speed, split_pattern=r"\n+"):
+        for result in self._pipeline(chunks.pieces(text), voice=voice, speed=speed):
             if result.audio is not None:
                 samples = np.clip(result.audio.numpy(), -1.0, 1.0)
                 yield (samples * 32767.0).astype("<i2").tobytes()
