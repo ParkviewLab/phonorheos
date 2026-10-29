@@ -15,7 +15,8 @@ pub struct Settings {
     pub voice: String,
     /// The speed for items that name none, 0.5 to 2.
     pub speed: f32,
-    /// Whether text is spoken clause by clause as each is made, or made whole first.
+    /// Whether text is spoken clause by clause as each is made, or made whole first (the
+    /// default: whole text sounds natural, whilst each clause adds a pause).
     pub by_clause: bool,
     /// Words and how they are said: a respelling, or `/phonemes/`.
     pub words: BTreeMap<String, String>,
@@ -29,7 +30,7 @@ impl Default for Settings {
         Self {
             voice: "bm_lewis".into(),
             speed: 1.0,
-            by_clause: true,
+            by_clause: false,
             // The app says its own name as its owner does (chosen by ear, 2026-10-29).
             words: BTreeMap::from([("phonorheos".into(), "/fQnQ ɹˈiːQs/".into())]),
             lan: false,

@@ -90,7 +90,7 @@ class Helper:
             text = words.apply_table(msg["text"], self._table)
             voice = str(msg.get("voice") or "bm_lewis")
             speed = float(msg.get("speed") or 1.0)
-            by_clause = bool(msg.get("by_clause", True))
+            by_clause = bool(msg.get("by_clause", False))
             for chunk in self.engine.speak(text, voice, speed, by_clause):
                 if self.is_cancelled(item):
                     break

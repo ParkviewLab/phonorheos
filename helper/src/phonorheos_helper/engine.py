@@ -163,7 +163,7 @@ class Engine:
     def phonemes(self, text: str) -> str:
         return self._pipeline.g2p(text)[0]
 
-    def speak(self, text: str, voice: str, speed: float, by_clause: bool = True) -> Iterator[bytes]:
+    def speak(self, text: str, voice: str, speed: float, by_clause: bool = False) -> Iterator[bytes]:
         """The audio of `text` at 24 kHz, as 16-bit little-endian mono: one chunk per clause
         (see `chunks`), or, when `by_clause` is off, the text handed to Kokoro whole."""
         import numpy as np  # ty: ignore[unresolved-import]

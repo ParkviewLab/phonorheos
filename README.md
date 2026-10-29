@@ -33,7 +33,7 @@ The first time it opens, phonorheos downloads its speech models and its 28 voice
 The window shows:
 
 - **the state line:** ready, speaking for which client, downloading the voice, or, if the voice stopped, why (it is started again on its own);
-- **voice:** the voice and the speed used for text that names none, and a line to type something and hear it;
+- **voice:** the voice and the speed used for text that names none; "Speak each clause as soon as it is made", off by default, which starts a long text sooner (its first clause, rather than its first 25 seconds or so, is made before it sounds) at the cost of a pause after every comma and full stop; and a line to type something and hear it;
 - **queue:** what is being spoken and what waits, each with **Withdraw**; **Stop** at the top silences everything at once;
 - **clients:** the apps reading the event stream;
 - **recently spoken:** the last 50 pieces, with who sent them, and whether each was cancelled or failed.
