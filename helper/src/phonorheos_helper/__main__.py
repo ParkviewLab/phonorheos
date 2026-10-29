@@ -35,11 +35,15 @@ class Helper:
         self.out = out
         self.words: dict[str, str] = dict(words.DEFAULT_WORDS)
         self.cancelled: set[str] = set()
+        self.speaking: str | None = None
         self._lock = threading.Lock()
+        self._table: dict[str, str] | None = None
 
     def cancel(self, item: str) -> None:
+        """Marks an item to stop; a cancel for an item already spoken is dropped."""
         with self._lock:
-            self.cancelled.add(item)
+            if item == self.speaking or self.speaking is None:
+                self.cancelled.add(item)
 
     def is_cancelled(self, item: str) -> bool:
         with self._lock:
@@ -51,9 +55,16 @@ class Helper:
         if op == "quit":
             return False
         if op == "load":
-            self.load()
+            try:
+                self.load()
+            except Exception as e:  # shown in the window; the app starts the helper again
+                self.out.send(
+                    event="error", id=None, message=f"the voice could not load: {type(e).__name__}: {e}"
+                )
+                return False
         elif op == "words":
             self.words = {str(k): str(v) for k, v in msg["words"].items()}
+            self._table = None
         elif op == "voices":
             self.out.send(event="voices", voices=self.engine.voices())
         elif op == "speak":
@@ -69,10 +80,14 @@ class Helper:
 
     def speak(self, msg: dict[str, Any]) -> None:
         item = msg["id"]
+        with self._lock:
+            self.speaking = item
         try:
             if not self.engine.loaded:
                 self.load()
-            text = words.apply(msg["text"], self.words, self.engine.phonemes)
+            if self._table is None:
+                self._table = words.table(self.words, self.engine.phonemes)
+            text = words.apply_table(msg["text"], self._table)
             voice = str(msg.get("voice") or "bm_lewis")
             speed = float(msg.get("speed") or 1.0)
             for chunk in self.engine.speak(text, voice, speed):
@@ -85,7 +100,8 @@ class Helper:
             self.out.send(event="error", id=item, message=f"{type(e).__name__}: {e}")
         finally:
             with self._lock:
-                self.cancelled.discard(item)
+                self.cancelled.clear()
+                self.speaking = None
             self.out.send(event="done", id=item)
 
 

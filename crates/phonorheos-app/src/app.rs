@@ -259,6 +259,12 @@ async fn set_lan(state: S<'_>, on: bool) -> Result<(), String> {
     }
     let mut tcp = state.tcp.lock().await;
     tcp.set(on).await;
+    if tcp.lan != on {
+        // The LAN could not be opened: keep the setting as it really is.
+        let mut s = state.settings.lock().expect("settings lock");
+        s.lan = tcp.lan;
+        state.save(&s)?;
+    }
     match &tcp.error {
         Some(e) => Err(e.clone()),
         None => Ok(()),

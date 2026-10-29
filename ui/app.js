@@ -7,6 +7,16 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
 let current = null;
+
+// Shows a command's error in the window (a webview may not show alert()), for 8 s.
+let errorTimer = null;
+function showError(e) {
+  const box = $("error");
+  box.textContent = String(e);
+  box.hidden = false;
+  clearTimeout(errorTimer);
+  errorTimer = setTimeout(() => { box.hidden = true; }, 8000);
+}
 let editingWords = false;
 
 function el(tag, attrs = {}, ...children) {
@@ -94,7 +104,7 @@ function drawWords(words) {
 }
 
 async function saveWords(words) {
-  try { await invoke("set_words", { words }); } catch (e) { alert(e); }
+  try { await invoke("set_words", { words }); } catch (e) { showError(e); }
   refresh();
 }
 
@@ -109,11 +119,11 @@ $("toggle-settings").onclick = () => {
   $("toggle-settings").textContent = open ? "Done" : "Settings";
 };
 $("stop").onclick = () => invoke("stop");
-const setDefaults = () => invoke("set_defaults", { voice: $("voice").value, speed: Number($("speed").value) }).then(refresh).catch(alert);
+const setDefaults = () => invoke("set_defaults", { voice: $("voice").value, speed: Number($("speed").value) }).then(refresh).catch(showError);
 $("voice").onchange = setDefaults;
 $("speed").onchange = setDefaults;
 $("speed").oninput = () => { $("speed-value").textContent = `${Number($("speed").value).toFixed(2)}×`; };
-const trySay = () => { const t = $("try-text").value; if (t.trim()) invoke("try_say", { text: t }).catch(alert); };
+const trySay = () => { const t = $("try-text").value; if (t.trim()) invoke("try_say", { text: t }).catch(showError); };
 $("try").onclick = trySay;
 $("try-text").onkeydown = (e) => { if (e.key === "Enter") trySay(); };
 $("add-word").onclick = () => {
@@ -126,17 +136,17 @@ for (const id of ["new-word", "new-said"]) {
   $(id).onfocus = () => { editingWords = true; };
   $(id).onblur = () => { editingWords = false; };
 }
-$("lan").onchange = () => invoke("set_lan", { on: $("lan").checked }).catch(alert).then(refresh);
+$("lan").onchange = () => invoke("set_lan", { on: $("lan").checked }).catch(showError).then(refresh);
 $("issue").onclick = async () => {
   try {
     const secret = await invoke("issue_token", { name: $("token-name").value });
     $("token-name").value = "";
     $("secret").hidden = false;
     $("secret").textContent = `Copy this token now; it is not shown again: ${secret}`;
-  } catch (e) { alert(e); }
+  } catch (e) { showError(e); }
   refresh();
 };
-$("autostart").onchange = () => invoke("set_autostart", { on: $("autostart").checked }).catch(alert).then(refresh);
+$("autostart").onchange = () => invoke("set_autostart", { on: $("autostart").checked }).catch(showError).then(refresh);
 
 listen("changed", refresh);
 refresh();

@@ -19,8 +19,8 @@ use tokio::sync::{Notify, broadcast, watch};
 pub enum Control {
     /// Stop speaking this item.
     Cancel(String),
-    /// Stop speaking whatever is being spoken.
-    Stop,
+    /// Stop speaking this item, as part of a stop of everything.
+    Stop(String),
 }
 
 /// How an item ended.
@@ -192,8 +192,8 @@ impl Core {
         for item in &removed {
             self.publish(Kind::Cancelled, item, Some("stopped".into()), false);
         }
-        if speaking.is_some() {
-            let _ = self.control.send(Control::Stop);
+        if let Some(item) = &speaking {
+            let _ = self.control.send(Control::Stop(item.id.clone()));
         }
         self.touch();
         removed.len() + usize::from(speaking.is_some())
@@ -422,7 +422,10 @@ mod tests {
         }
         let item = core.next().await;
         assert_eq!(core.stop(), 3);
-        assert_eq!(control.recv().await.unwrap(), Control::Stop);
+        assert_eq!(
+            control.recv().await.unwrap(),
+            Control::Stop(item.id.clone())
+        );
         core.finished(&item, Outcome::Cancelled);
         let after: Vec<Kind> = kinds(&core, 3);
         assert_eq!(after, [Kind::Cancelled, Kind::Cancelled, Kind::Cancelled]);
