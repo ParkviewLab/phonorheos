@@ -50,3 +50,7 @@ def test_a_line_break_ends_a_piece():
 
 def test_blank_text_has_no_pieces():
     assert chunks.pieces("  \n\n ") == []
+
+
+def test_a_comma_or_full_stop_before_a_line_break_is_a_cut():
+    assert chunks.pieces("First,\nsecond.\nthird") == ["First,", "second.", "third"]
