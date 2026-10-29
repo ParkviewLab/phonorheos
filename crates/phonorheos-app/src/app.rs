@@ -323,6 +323,7 @@ fn try_say(state: S<'_>, text: String, voice: Option<String>) -> Result<String, 
         client: "phonorheos window".into(),
         voice: voice.filter(|v| VOICES.contains(&v.as_str())),
         speed: None,
+        by_clause: None,
     });
     Ok(accepted.id)
 }

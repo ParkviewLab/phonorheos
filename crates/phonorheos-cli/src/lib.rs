@@ -11,7 +11,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 const USAGE: &str = "usage:
-  phonorheos say [--voice <voice>] [--speed <0.5..2>] [--no-wait] <text>…
+  phonorheos say [--voice <voice>] [--speed <0.5..2>] [--by-clause | --whole] [--no-wait] <text>…
   phonorheos stop
   phonorheos status
   phonorheos --version";
@@ -52,6 +52,7 @@ struct Say {
     text: String,
     voice: Option<String>,
     speed: Option<f32>,
+    by_clause: Option<bool>,
     wait: bool,
 }
 
@@ -60,6 +61,7 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
         text: String::new(),
         voice: None,
         speed: None,
+        by_clause: None,
         wait: true,
     };
     let mut words = Vec::new();
@@ -71,6 +73,8 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
                 let v = it.next().ok_or("--speed needs a number")?;
                 s.speed = Some(v.parse().map_err(|_| format!("not a speed: {v}"))?);
             }
+            "--by-clause" => s.by_clause = Some(true),
+            "--whole" => s.by_clause = Some(false),
             "--no-wait" => s.wait = false,
             "--" => words.extend(it.by_ref().cloned()),
             _ => words.push(a.clone()),
@@ -91,6 +95,9 @@ fn say(socket: &Path, args: &[String]) -> Result<(), String> {
     }
     if let Some(sp) = s.speed {
         body["speed"] = sp.into();
+    }
+    if let Some(b) = s.by_clause {
+        body["by_clause"] = b.into();
     }
     let (code, reply) = request(socket, "POST", "/speak", Some(&body.to_string()))?;
     let reply: serde_json::Value =
@@ -230,6 +237,15 @@ mod tests {
         assert_eq!((s.text.as_str(), s.speed), ("--not-an-option", Some(1.2)));
         assert!(parse_say(&args(&[])).is_err());
         assert!(parse_say(&args(&["--speed", "fast", "x"])).is_err());
+        assert_eq!(
+            parse_say(&args(&["--by-clause", "x"])).unwrap().by_clause,
+            Some(true)
+        );
+        assert_eq!(
+            parse_say(&args(&["--whole", "x"])).unwrap().by_clause,
+            Some(false)
+        );
+        assert_eq!(parse_say(&args(&["x"])).unwrap().by_clause, None);
     }
 
     #[test]

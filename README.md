@@ -58,7 +58,7 @@ phonorheos serves HTTP/1.1 on:
 
 | Endpoint | What it does |
 |---|---|
-| `POST /speak` with `{"text": "…", "client": "…", "voice": "bm_lewis", "speed": 1.0}` | Queues the text (up to 20 000 characters, in a body of at most 256 KiB); `client`, `voice` and `speed` (0.5 to 2) are optional. Returns 201 with `{"id", "event", "ahead"}`: the item's id, its `queued` event's id, and how many items are ahead of it. On the LAN the client's name is its token's name. |
+| `POST /speak` with `{"text": "…", "client": "…", "voice": "bm_lewis", "speed": 1.0, "by_clause": false}` | Queues the text (up to 20 000 characters, in a body of at most 256 KiB); `client`, `voice`, `speed` (0.5 to 2) and `by_clause` (whether to speak it clause by clause; the window's setting where it is left out) are optional. Returns 201 with `{"id", "event", "ahead"}`: the item's id, its `queued` event's id, and how many items are ahead of it. On the LAN the client's name is its token's name. |
 | `DELETE /speak/<id>` | Withdraws the item, or stops it if it is being spoken: 204, or 404 if there is no such item. |
 | `POST /stop` | Silences everything: `{"stopped": n}`. |
 | `GET /events?item=<id>&client=<name>&last_id=<n>` | The events, as Server-Sent Events, optionally only one item's or one client's. A reconnecting client sends `Last-Event-ID` (or `?last_id=`) and is sent what it missed, while it is among the last 1000 events. A comment line every 15 s keeps the connection alive. |
@@ -80,7 +80,7 @@ From a shell, the `phonorheos` command does this. It talks to the running app an
 phonorheos say "Good evening. The build has finished."
 ```
 
-`say` waits until the text has been spoken (`--no-wait` returns at once), and takes `--voice <voice>` and `--speed <0.5 to 2>`; `phonorheos stop` silences everything and `phonorheos status` prints the state. On macOS the command is inside the app; link it onto your path once:
+`say` waits until the text has been spoken (`--no-wait` returns at once), and takes `--voice <voice>`, `--speed <0.5 to 2>`, and `--by-clause` or `--whole` to choose how the text is cut, whatever the window's setting; `phonorheos stop` silences everything and `phonorheos status` prints the state. On macOS the command is inside the app; link it onto your path once:
 
 ```bash
 sudo mkdir -p /usr/local/bin && sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos

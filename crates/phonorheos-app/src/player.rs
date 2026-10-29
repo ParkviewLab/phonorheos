@@ -34,6 +34,7 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
         let d = defaults.read().expect("defaults lock").clone();
         let voice = item.voice.clone().unwrap_or(d.voice);
         let speed = item.speed.unwrap_or(d.speed);
+        let by_clause = item.by_clause.unwrap_or(d.by_clause);
         let outcome = speak(
             &core,
             &helper,
@@ -41,7 +42,7 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
             &item,
             &voice,
             speed,
-            d.by_clause,
+            by_clause,
             &mut said,
             &mut control,
         )

@@ -4,7 +4,7 @@
 //! The HTTP interface, the same on the Unix socket, 127.0.0.1 and the LAN; each
 //! listener applies its own access rule (see `access`).
 //!
-//! - `POST /speak` `{"text", "client"?, "voice"?, "speed"?}` → 201 `{"id", "event", "ahead"}`
+//! - `POST /speak` `{"text", "client"?, "voice"?, "speed"?, "by_clause"?}` → 201 `{"id", "event", "ahead"}`
 //! - `DELETE /speak/{id}` → 204, or 404
 //! - `POST /stop` → `{"stopped": n}`
 //! - `GET /events?item=&client=&last_id=` (or `Last-Event-ID`) → Server-Sent Events
@@ -116,6 +116,7 @@ struct SpeakBody {
     client: Option<String>,
     voice: Option<String>,
     speed: Option<f32>,
+    by_clause: Option<bool>,
 }
 
 fn client_name(token: &TokenName, given: Option<String>, headers: &HeaderMap) -> String {
@@ -167,6 +168,7 @@ async fn speak(
         client: client_name(&token, body.client, &headers),
         voice,
         speed: body.speed,
+        by_clause: body.by_clause,
     });
     (StatusCode::CREATED, Json(accepted)).into_response()
 }
