@@ -13,11 +13,13 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio::sync::broadcast::error::RecvError;
 
-/// The voice and speed for items that name none, kept current from the settings.
+/// The voice and speed for items that name none, and how text is cut, kept current from
+/// the settings.
 #[derive(Debug, Clone)]
 pub struct Defaults {
     pub voice: String,
     pub speed: f32,
+    pub by_clause: bool,
 }
 
 pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<RwLock<Defaults>>) {
@@ -32,6 +34,7 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
         let d = defaults.read().expect("defaults lock").clone();
         let voice = item.voice.clone().unwrap_or(d.voice);
         let speed = item.speed.unwrap_or(d.speed);
+        let by_clause = item.by_clause.unwrap_or(d.by_clause);
         let outcome = speak(
             &core,
             &helper,
@@ -39,6 +42,7 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
             &item,
             &voice,
             speed,
+            by_clause,
             &mut said,
             &mut control,
         )
@@ -63,12 +67,13 @@ async fn speak(
     item: &Item,
     voice: &str,
     speed: f32,
+    by_clause: bool,
     said: &mut tokio::sync::broadcast::Receiver<Said>,
     control: &mut tokio::sync::broadcast::Receiver<Control>,
 ) -> Outcome {
     // Anything left over from an earlier item is not this one's.
     while said.try_recv().is_ok() {}
-    helper.speak(&item.id, &item.text, voice, speed);
+    helper.speak(&item.id, &item.text, voice, speed, by_clause);
     let mut started = false;
     let mut failure: Option<String> = None;
     loop {

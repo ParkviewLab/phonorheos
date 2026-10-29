@@ -33,7 +33,7 @@ The first time it opens, phonorheos downloads its speech models and its 28 voice
 The window shows:
 
 - **the state line:** ready, speaking for which client, downloading the voice, or, if the voice stopped, why (it is started again on its own);
-- **voice:** the voice and the speed used for text that names none, and a line to type something and hear it;
+- **voice:** the voice and the speed used for text that names none; "Speak each clause as soon as it is made", off by default, which starts a long text sooner (its first clause, rather than its first 25 seconds or so, is made before it sounds) at the cost of a pause after every comma and full stop; and a line to type something and hear it;
 - **queue:** what is being spoken and what waits, each with **Withdraw**; **Stop** at the top silences everything at once;
 - **clients:** the apps reading the event stream;
 - **recently spoken:** the last 50 pieces, with who sent them, and whether each was cancelled or failed.
@@ -58,7 +58,7 @@ phonorheos serves HTTP/1.1 on:
 
 | Endpoint | What it does |
 |---|---|
-| `POST /speak` with `{"text": "…", "client": "…", "voice": "bm_lewis", "speed": 1.0}` | Queues the text (up to 20 000 characters, in a body of at most 256 KiB); `client`, `voice` and `speed` (0.5 to 2) are optional. Returns 201 with `{"id", "event", "ahead"}`: the item's id, its `queued` event's id, and how many items are ahead of it. On the LAN the client's name is its token's name. |
+| `POST /speak` with `{"text": "…", "client": "…", "voice": "bm_lewis", "speed": 1.0, "by_clause": false}` | Queues the text (up to 20 000 characters, in a body of at most 256 KiB); `client`, `voice`, `speed` (0.5 to 2) and `by_clause` (whether to speak it clause by clause; the window's setting where it is left out) are optional. Returns 201 with `{"id", "event", "ahead"}`: the item's id, its `queued` event's id, and how many items are ahead of it. On the LAN the client's name is its token's name. |
 | `DELETE /speak/<id>` | Withdraws the item, or stops it if it is being spoken: 204, or 404 if there is no such item. |
 | `POST /stop` | Silences everything: `{"stopped": n}`. |
 | `GET /events?item=<id>&client=<name>&last_id=<n>` | The events, as Server-Sent Events, optionally only one item's or one client's. A reconnecting client sends `Last-Event-ID` (or `?last_id=`) and is sent what it missed, while it is among the last 1000 events. A comment line every 15 s keeps the connection alive. |
@@ -80,7 +80,7 @@ From a shell, the `phonorheos` command does this. It talks to the running app an
 phonorheos say "Good evening. The build has finished."
 ```
 
-`say` waits until the text has been spoken (`--no-wait` returns at once), and takes `--voice <voice>` and `--speed <0.5 to 2>`; `phonorheos stop` silences everything and `phonorheos status` prints the state. On macOS the command is inside the app; link it onto your path once:
+`say` waits until the text has been spoken (`--no-wait` returns at once), and takes `--voice <voice>`, `--speed <0.5 to 2>`, and `--by-clause` or `--whole` to choose how the text is cut, whatever the window's setting; `phonorheos stop` silences everything and `phonorheos status` prints the state. On macOS the command is inside the app; link it onto your path once:
 
 ```bash
 sudo mkdir -p /usr/local/bin && sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos

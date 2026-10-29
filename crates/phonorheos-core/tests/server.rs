@@ -67,12 +67,28 @@ async fn speaking_queues_the_text_and_returns_its_id() {
 }
 
 #[tokio::test]
+async fn a_request_may_say_how_its_text_is_cut() {
+    for (body, want) in [
+        (json!({"text": "a", "by_clause": true}), Some(true)),
+        (json!({"text": "a"}), None),
+    ] {
+        let c = core();
+        send(&c, post("/speak", body)).await;
+        assert_eq!(c.next().await.by_clause, want);
+    }
+}
+
+#[tokio::test]
 async fn bad_requests_are_refused() {
     let c = core();
     for (body, code) in [
         (json!({"text": "   "}), StatusCode::BAD_REQUEST),
         (json!({"words": "x"}), StatusCode::BAD_REQUEST),
         (json!({"text": "x", "speed": 3.0}), StatusCode::BAD_REQUEST),
+        (
+            json!({"text": "x", "by_clause": "yes"}),
+            StatusCode::BAD_REQUEST,
+        ),
         (
             json!({"text": "x", "voice": "../etc"}),
             StatusCode::BAD_REQUEST,

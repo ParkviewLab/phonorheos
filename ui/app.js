@@ -61,6 +61,7 @@ function draw(s) {
   const voice = $("voice");
   if (!voice.options.length) for (const v of s.voices) voice.append(el("option", { value: v }, v));
   if (document.activeElement !== voice) voice.value = s.settings.voice;
+  $("by-clause").checked = s.settings.by_clause;
   if (document.activeElement !== $("speed")) $("speed").value = s.settings.speed;
   $("speed-value").textContent = `${Number(s.settings.speed).toFixed(2)}×`;
 
@@ -119,9 +120,10 @@ $("toggle-settings").onclick = () => {
   $("toggle-settings").textContent = open ? "Done" : "Settings";
 };
 $("stop").onclick = () => invoke("stop");
-const setDefaults = () => invoke("set_defaults", { voice: $("voice").value, speed: Number($("speed").value) }).then(refresh).catch(showError);
+const setDefaults = () => invoke("set_defaults", { voice: $("voice").value, speed: Number($("speed").value), byClause: $("by-clause").checked }).then(refresh).catch(showError);
 $("voice").onchange = setDefaults;
 $("speed").onchange = setDefaults;
+$("by-clause").onchange = setDefaults;
 $("speed").oninput = () => { $("speed-value").textContent = `${Number($("speed").value).toFixed(2)}×`; };
 const trySay = () => { const t = $("try-text").value; if (t.trim()) invoke("try_say", { text: t }).catch(showError); };
 $("try").onclick = trySay;

@@ -108,6 +108,7 @@ pub fn run() {
             let defaults = Arc::new(RwLock::new(Defaults {
                 voice: settings.voice.clone(),
                 speed: settings.speed,
+                by_clause: settings.by_clause,
             }));
             let lan = settings.lan;
             let state = Arc::new(State {
@@ -216,14 +217,14 @@ async fn app_state(app: tauri::AppHandle, state: S<'_>) -> Result<Value, String>
         "readers": state.core.readers(),
         "recent": *state.recent.lock().expect("recent lock"),
         "voices": VOICES,
-        "settings": {"voice": s.voice, "speed": s.speed, "words": s.words, "lan": lan, "tokens": tokens},
+        "settings": {"voice": s.voice, "speed": s.speed, "by_clause": s.by_clause, "words": s.words, "lan": lan, "tokens": tokens},
         "lan_error": lan_error,
         "autostart": app.autolaunch().is_enabled().unwrap_or(false),
     }))
 }
 
 #[tauri::command]
-fn set_defaults(state: S<'_>, voice: String, speed: f32) -> Result<(), String> {
+fn set_defaults(state: S<'_>, voice: String, speed: f32, by_clause: bool) -> Result<(), String> {
     if !VOICES.contains(&voice.as_str()) {
         return Err(format!("no such voice: {voice}"));
     }
@@ -231,8 +232,13 @@ fn set_defaults(state: S<'_>, voice: String, speed: f32) -> Result<(), String> {
     let mut s = state.settings.lock().expect("settings lock");
     s.voice = voice.clone();
     s.speed = speed;
+    s.by_clause = by_clause;
     state.save(&s)?;
-    *state.defaults.write().expect("defaults lock") = Defaults { voice, speed };
+    *state.defaults.write().expect("defaults lock") = Defaults {
+        voice,
+        speed,
+        by_clause,
+    };
     Ok(())
 }
 
@@ -317,6 +323,7 @@ fn try_say(state: S<'_>, text: String, voice: Option<String>) -> Result<String, 
         client: "phonorheos window".into(),
         voice: voice.filter(|v| VOICES.contains(&v.as_str())),
         speed: None,
+        by_clause: None,
     });
     Ok(accepted.id)
 }

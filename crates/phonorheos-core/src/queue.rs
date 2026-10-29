@@ -15,6 +15,7 @@ pub struct Item {
     pub client: String,
     pub voice: Option<String>,
     pub speed: Option<f32>,
+    pub by_clause: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -138,6 +139,7 @@ mod tests {
             client: "test".into(),
             voice: None,
             speed: None,
+            by_clause: None,
         }
     }
 

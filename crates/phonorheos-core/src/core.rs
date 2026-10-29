@@ -70,6 +70,8 @@ pub struct Request {
     pub client: String,
     pub voice: Option<String>,
     pub speed: Option<f32>,
+    /// Whether to speak it clause by clause; where unset, the owner's setting decides.
+    pub by_clause: Option<bool>,
 }
 
 /// What the server returns for an accepted request.
@@ -137,6 +139,7 @@ impl Core {
             client: r.client,
             voice: r.voice,
             speed: r.speed,
+            by_clause: r.by_clause,
         };
         let (ahead, event) = {
             let mut q = self.queue.lock().expect("queue lock");
@@ -331,6 +334,7 @@ mod tests {
             client: "test".into(),
             voice: None,
             speed: None,
+            by_clause: None,
         }
     }
 
