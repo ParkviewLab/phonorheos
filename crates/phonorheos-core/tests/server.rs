@@ -237,3 +237,28 @@ async fn curl_version() -> String {
         .unwrap_or("")
         .to_string()
 }
+
+/// With the LAN switched on, one listener serves every interface: a caller on this
+/// machine gets the loopback rules (no token, the Host checked), as graptostream does.
+#[tokio::test]
+async fn on_the_lan_listener_a_local_caller_needs_no_token() {
+    let c = core();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    tokio::spawn({
+        let c = c.clone();
+        async move { phonorheos_core::server::serve_tcp(c, listener, true).await }
+    });
+    let curl = |host: String| async move {
+        let out = tokio::process::Command::new("curl")
+            .args(["-s", "-o", "/dev/null", "-w", "%{http_code}", "-H"])
+            .arg(format!("Host: {host}"))
+            .arg(format!("http://127.0.0.1:{port}/status"))
+            .output()
+            .await
+            .unwrap();
+        String::from_utf8_lossy(&out.stdout).to_string()
+    };
+    assert_eq!(curl(format!("127.0.0.1:{port}")).await, "200");
+    assert_eq!(curl(format!("evil.example:{port}")).await, "403");
+}

@@ -11,6 +11,7 @@ misaki's G2P then uses its own neural fallback for words it does not know.
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 import sys
 import threading
@@ -53,27 +54,62 @@ def _incomplete_bytes() -> int:
     return total
 
 
-def ensure_models(british: bool, voice: str, progress: Progress) -> None:
-    """Downloads what the voice needs that is not yet in the cache, reporting progress."""
+# Kokoro's English voices, all fetched on first run (about 15 MB) so that no voice
+# needs the network later. The app's window offers the same list.
+VOICES = (
+    *(
+        f"af_{v}"
+        for v in (
+            "alloy",
+            "aoede",
+            "bella",
+            "heart",
+            "jessica",
+            "kore",
+            "nicole",
+            "nova",
+            "river",
+            "sarah",
+            "sky",
+        )
+    ),
+    *(f"am_{v}" for v in ("adam", "echo", "eric", "fenrir", "liam", "michael", "onyx", "puck", "santa")),
+    *(f"bf_{v}" for v in ("alice", "emma", "isabella", "lily")),
+    *(f"bm_{v}" for v in ("daniel", "fable", "george", "lewis")),
+)
+MARKER = "phonorheos-models.json"
+
+
+def _home() -> Path:
+    return Path(os.environ.get("HF_HOME") or Path.home() / ".cache" / "huggingface")
+
+
+def models_complete() -> bool:
+    """Whether a first run has fetched everything; checked without the network."""
+    return (_home() / MARKER).is_file()
+
+
+def ensure_models(british: bool, progress: Progress) -> None:
+    """Downloads everything the voice needs that is not yet in the cache, reporting
+    progress, then records that it is complete."""
     from huggingface_hub import HfApi, try_to_load_from_cache  # ty: ignore[unresolved-import]
     from huggingface_hub import hf_hub_download as fetch  # ty: ignore[unresolved-import]
 
     api = HfApi()
+    kokoro = ("config.json", "kokoro-v1_0.pth", *(f"voices/{v}.pt" for v in VOICES))
     wanted: list[tuple[str, str, int]] = []
-    for repo, keep in (
-        (KOKORO, ("config.json", "kokoro-v1_0.pth", f"voices/{voice}.pt")),
-        (FALLBACK[british], None),
-    ):
-        cached = [f for f in (keep or ()) if isinstance(try_to_load_from_cache(repo, f), str)]
-        if keep and len(cached) == len(keep):
-            continue
+    fetched: list[list[str]] = []
+    for repo, keep in ((KOKORO, kokoro), (FALLBACK[british], None)):
         info = api.model_info(repo, files_metadata=True)
-        for s in info.siblings or []:
-            if (keep is None or s.rfilename in keep) and not s.rfilename.startswith("."):
-                if keep is None and s.rfilename.endswith((".md", ".gitattributes")):
-                    continue
-                if not isinstance(try_to_load_from_cache(repo, s.rfilename), str):
-                    wanted.append((repo, s.rfilename, s.size or 0))
+        for f in info.siblings or []:
+            name = f.rfilename
+            if keep is not None and name not in keep:
+                continue
+            if keep is None and (name.startswith(".") or name.endswith((".md", ".gitattributes"))):
+                continue
+            fetched.append([repo, name])
+            if not isinstance(try_to_load_from_cache(repo, name), str):
+                wanted.append((repo, name, f.size or 0))
     total = sum(size for _, _, size in wanted)
     done = 0
     for repo, name, size in wanted:
@@ -92,6 +128,7 @@ def ensure_models(british: bool, voice: str, progress: Progress) -> None:
             t.join()
         done += size
         progress(name, done, total)
+    (_home() / MARKER).write_text(json.dumps({"files": fetched}, indent=1))
 
 
 class Engine:
@@ -102,9 +139,14 @@ class Engine:
         self._pipeline: Any = None
 
     def load(self, progress: Progress, voice: str = DEFAULT_VOICE) -> None:
-        offline = os.environ.get("HF_HUB_OFFLINE")
-        if not offline:
-            ensure_models(self.british, voice, progress)
+        if models_complete():
+            # Everything is cached: no request is made, so it starts offline. Set
+            # before Hugging Face's and transformers' modules are first imported,
+            # which read these once.
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        else:
+            ensure_models(self.british, progress)
         _without_espeak()
         from kokoro import KModel, KPipeline  # ty: ignore[unresolved-import]
 
