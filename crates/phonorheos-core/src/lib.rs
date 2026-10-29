@@ -4,6 +4,17 @@
 //! The parts of phonorheos that need no window and no voice: the queue, its
 //! events, and the HTTP interface that apps reach it by.
 
+pub mod access;
+pub mod clock;
+pub mod core;
+pub mod events;
+pub mod queue;
+pub mod server;
+
+/// The port phonorheos listens on at 127.0.0.1 (and, when switched on, on the LAN);
+/// graptostream's is 35860.
+pub const PORT: u16 = 35861;
+
 /// The version of phonorheos, from `VERSION.txt` at build time.
 pub fn version() -> &'static str {
     include_str!("../../../VERSION.txt").trim()
