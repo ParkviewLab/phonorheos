@@ -21,7 +21,17 @@ Different kinds of content carry different licenses (encoded in [`REUSE.toml`](R
 
 ## Third-party software
 
-phonorheos carries a Python runtime and the packages of its voice, and is built from Rust crates. Every one of them is under a permissive license (MIT, Apache-2.0, BSD or the Python Software Foundation License); none is copyleft, and espeak-ng in particular is deliberately left out. The full list, with each package's notice, is generated at build time and carried in the app.
+phonorheos carries a Python runtime and the packages of its voice, and is built from Rust crates. Almost all of them are under permissive licenses (MIT, Apache-2.0, BSD or the Python Software Foundation License). A few are under weak copyleft licenses, accepted for this project because they bind only changes to those components themselves, which phonorheos does not make; nothing is under the GPL, and espeak-ng in particular is deliberately left out. The build refuses any component under the GPL or AGPL. The full list, with each package's notice, is generated at build time and carried in the app.
+
+The weak copyleft components, all carried unmodified:
+
+| Component | Brought in by | License |
+|---|---|---|
+| [num2words](https://github.com/savoirfairelinux/num2words) | misaki, which says numbers as words | LGPL-2.1 |
+| [autocommand](https://github.com/Lucretiel/autocommand) (vendored inside setuptools) | PyTorch and spaCy | LGPL-3.0 |
+| [certifi](https://github.com/certifi/python-certifi) | the HTTP libraries behind the model download (certificate bundle) | MPL-2.0 |
+| [tqdm](https://github.com/tqdm/tqdm) | Hugging Face's libraries and spaCy (progress bars) | MPL-2.0 and MIT |
+| The Rust crates `cssparser`, `cssparser-macros`, `selectors`, `dtoa-short` and `option-ext` | Tauri and its autostart plugin (HTML parsing; locating the user's folders) | MPL-2.0 |
 
 The main parts:
 
