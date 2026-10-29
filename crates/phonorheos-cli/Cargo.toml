@@ -1,0 +1,18 @@
+[package]
+name = "phonorheos-cli"
+description = "The phonorheos command: sends text to the running app to be spoken"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "phonorheos"
+path = "src/main.rs"
+
+[dependencies]
+phonorheos-core = { path = "../phonorheos-core" }
+
+[lints]
+workspace = true
