@@ -298,5 +298,9 @@ pub async fn serve_tcp(
         Source::Loopback(port)
     };
     let app = router(core, source).layer(Extension(LocalPort(port)));
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
 }
