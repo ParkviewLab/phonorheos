@@ -8,6 +8,7 @@ pub mod access;
 pub mod clock;
 pub mod core;
 pub mod events;
+pub mod paths;
 pub mod queue;
 pub mod server;
 

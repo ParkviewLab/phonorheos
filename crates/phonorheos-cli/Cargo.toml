@@ -7,12 +7,16 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[lib]
+path = "src/lib.rs"
+
 [[bin]]
 name = "phonorheos"
 path = "src/main.rs"
 
 [dependencies]
 phonorheos-core = { path = "../phonorheos-core" }
+serde_json = "1.0.154"
 
 [lints]
 workspace = true

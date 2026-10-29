@@ -2,7 +2,7 @@
 # the crates' own version stays 0.0.0 and is never shipped. See docs/CONTRIBUTING.md.
 [workspace]
 resolver = "3"
-members = ["crates/phonorheos-core", "crates/phonorheos-cli"]
+members = ["crates/phonorheos-core", "crates/phonorheos-cli", "crates/phonorheos-app"]
 
 [workspace.package]
 version = "0.0.0"
