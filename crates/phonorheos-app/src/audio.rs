@@ -50,8 +50,10 @@ impl Output {
     /// Adds 16-bit little-endian mono samples at 24 kHz to be played.
     pub fn push(&self, pcm: &[u8]) {
         let samples: Vec<f32> = pcm
-            .chunks_exact(2)
-            .map(|b| f32::from(i16::from_le_bytes([b[0], b[1]])) / 32768.0)
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|b| f32::from(i16::from_le_bytes(*b)) / 32768.0)
             .collect();
         let rate = *self.shared.rate.lock().expect("rate lock");
         let converted = resample(&samples, VOICE_RATE, rate);
