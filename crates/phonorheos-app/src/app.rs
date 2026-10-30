@@ -89,6 +89,15 @@ fn python(app: &tauri::App) -> PathBuf {
 
 pub fn run() {
     tauri::Builder::default()
+        // First, so that a second launch only brings this window forward and exits
+        // before it starts a voice or touches the socket and the port.
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,

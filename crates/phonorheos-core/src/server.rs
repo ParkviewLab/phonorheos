@@ -275,11 +275,19 @@ async fn events(
 }
 
 /// Serves on a Unix socket, private to the user; a stale socket file is replaced.
+/// A socket that another phonorheos still answers on is left alone, and this
+/// fails with `AddrInUse`: replacing it would cut that one off from its clients.
 #[cfg(unix)]
 pub async fn serve_socket(core: Arc<Core>, path: &std::path::Path) -> std::io::Result<()> {
     use std::os::unix::fs::PermissionsExt;
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
+    }
+    if tokio::net::UnixStream::connect(path).await.is_ok() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::AddrInUse,
+            "another phonorheos is serving this socket",
+        ));
     }
     let _ = std::fs::remove_file(path);
     let listener = tokio::net::UnixListener::bind(path)?;
