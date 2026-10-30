@@ -4,6 +4,18 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.1.1] - 2026-10-30
+
+### Highlights
+
+This release is documentation only. It adds a user manual for people who install phonorheos without building it, covering installation on each supported system, the window, voices and speed, the clause setting, the word list, use from other machines with tokens, the command, starting at login, privacy and troubleshooting, published both as Markdown and as an HTML twin on a new documentation site at https://parkviewlab.github.io/phonorheos/ alongside a download page with one tile per installer and install steps. It also records the requirements, evidence and decisions behind the project in `docs/why.md`, linked from the README's Building section, and removes the version number from the README's Status line so it no longer goes stale with each release.
+
+### Docs
+
+- The requirements, evidence and decisions behind phonorheos (#13)
+- A user manual, its HTML twin, and a downloads page on a documentation site (#14)
+- The README's status names no version (#15)
+
 ## [v0.1.0] - 2026-10-29
 
 ### Highlights
