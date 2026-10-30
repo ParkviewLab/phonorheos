@@ -4,6 +4,20 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.1.2] - 2026-10-30
+
+### Highlights
+
+Launching phonorheos while it is already running no longer breaks the running copy: the second launch now brings the existing window forward and exits, instead of deleting the live Unix socket and leaving the command and socket clients reporting that phonorheos is not running while the app kept answering on its port. Stale socket files are still cleared away as before. The README also now links to the download page and the documentation site, including the user manual.
+
+### Bug fixes
+
+- A second launch no longer takes the running app's socket (#18)
+
+### Docs
+
+- The README links to the download page and the documentation site (#16)
+
 ## [v0.1.1] - 2026-10-30
 
 ### Highlights
