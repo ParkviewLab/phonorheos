@@ -21,7 +21,7 @@ SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 # --- Brand marks: the app icon, its source and the files made from it → all rights reserved
 [[annotations]]
-path = ["brand/**", "crates/phonorheos-app/icons/**"]
+path = ["brand/**", "crates/phonorheos-app/icons/**", "site/assets/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Gary Frattarola <garyf@parkviewlab.ai>"
 SPDX-License-Identifier = "LicenseRef-AllRightsReserved"

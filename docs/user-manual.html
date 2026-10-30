@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+SPDX-License-Identifier: CC-BY-4.0
+
+Designed HTML twin of docs/user-manual.md, authored from the ParkviewLab
+md-to-html scaffold. The Markdown is canonical: when they drift, the Markdown
+wins and this file is re-authored from it.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ParkviewLab · phonorheos user manual</title>
+<meta name="description" content="How to install and use phonorheos, the desktop app for macOS and Linux that speaks the text other apps send it, and makes its speech on your own machine with Kokoro, an open-weight voice.">
+<style>
+/* ===========================================================================
+   ParkviewLab brand: see the handbook's docs/brand.md (single source of truth).
+   Palette: three brand colours carry identity (teal, teal-deep, sage); the
+   Bauhaus accents are used once each at most: red marks the one network
+   caveat and the cost in the clause figure.
+   Michroma (SIL Open Font License 1.1, (c) The Michroma Project Authors) is
+   embedded as base64 woff2 so this file is offline and single-file.
+   =========================================================================== */
+@font-face {
+  font-family: 'Michroma';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('data:font/woff2;base64,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') format('woff2');
+}
+:root {
+  /* Brand */
+  --teal:#00C2C7; --teal-deep:#004f52; --sage:#90b095; --ink:#141414;
+  /* Bauhaus / Kandinsky accents */
+  --red:#E2483D; --blue:#2547C8; --yellow:#F2B33D;
+  /* Surfaces */
+  --paper:#f3eee2; --paper-2:#ece5d4; --card:#fbf8f1; --muted:#5d6258;
+  --code:#161412; --code-text:#ece5d4;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --display:'Michroma',var(--sans);
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+  line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap { max-width:960px; margin:0 auto; padding:0 24px 96px; }
+a { color:var(--teal-deep); text-decoration-color:var(--teal); }
+a:hover { color:var(--red); }
+
+/* ---- Header bar: logo mark + wordmark + download link ---- */
+header.site {
+  border-bottom:3px solid var(--ink); padding:22px 0 18px; margin-bottom:44px;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+}
+header.site .mark { height:54px; width:54px; flex:none; }
+header.site .word {
+  font-family:var(--display); text-transform:uppercase; letter-spacing:.12em;
+  font-size:15px; color:var(--teal-deep); line-height:1.1;
+}
+header.site .word small { display:block; color:var(--muted); font-size:11px; letter-spacing:.22em; margin-top:4px; }
+header.site .dl {
+  margin-left:auto; font-family:var(--mono); font-size:12px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.14em; text-decoration:none;
+  color:var(--teal-deep); border:2px solid var(--teal-deep); padding:7px 14px;
+}
+header.site .dl:hover { color:var(--paper); background:var(--teal-deep); }
+
+/* ---- Hero ---- */
+.hero { margin:8px 0 28px; }
+.hero h1 {
+  font-family:var(--display); font-size:32px; line-height:1.25; margin:0 0 16px;
+  color:var(--teal-deep); text-transform:uppercase; letter-spacing:.02em;
+}
+.hero .rule { height:6px; width:140px; background:var(--teal); margin:0 0 22px; }
+.hero p.lede { font-size:19px; max-width:720px; margin:0; }
+
+/* ---- Contents: the manual's sections, in order ---- */
+nav.toc { margin:0 0 8px; padding:14px 0; border-top:1px solid #d4cab5; border-bottom:1px solid #d4cab5; }
+nav.toc ol { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px 18px; }
+nav.toc li { font-family:var(--mono); font-size:12px; letter-spacing:.03em; }
+nav.toc a { text-decoration:none; }
+nav.toc a:hover { text-decoration:underline; }
+
+/* ---- Sections ---- */
+section { scroll-margin-top:16px; }
+h2 {
+  font-family:var(--display); font-size:20px; color:var(--teal-deep); letter-spacing:.01em;
+  margin:56px 0 16px; display:flex; align-items:center; gap:12px;
+}
+h2::before { content:""; width:12px; height:12px; background:var(--teal); flex:none; }
+h3 { font-family:var(--display); font-size:14px; letter-spacing:.01em; margin:28px 0 10px; }
+p, li { font-size:16.5px; }
+.prose { max-width:720px; }
+.ui { font-weight:600; }  /* a control's name, as the Markdown sets it in bold */
+
+/* ---- Install routes: macOS beside the Linux pair ---- */
+.routes { display:grid; grid-template-columns:1fr 2fr; gap:20px; margin:8px 0; align-items:stretch; }
+.card {
+  position:relative; background:var(--card); border:2px solid var(--ink);
+  padding:24px 20px 18px; overflow:hidden;
+}
+.card::before { content:""; position:absolute; top:0; left:0; width:100%; height:8px; background:var(--ac,var(--teal-deep)); }
+.card .kind { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.14em; color:var(--muted); font-weight:600; }
+.card h3 { margin:4px 0 10px; }
+.card p, .card li { font-size:15px; }
+.card ol { padding-left:20px; margin:10px 0 0; }
+.card ol li { margin-bottom:6px; }
+.card .req { margin:0; color:var(--muted); }
+.ac-teal{--ac:var(--teal-deep)} .ac-sage{--ac:#4f7d5a}
+.family { border:2px solid var(--ink); background:var(--paper-2); padding:16px 16px 14px; display:flex; flex-direction:column; }
+.family > h3 { margin:0 0 4px; }
+.family > p { margin:0 0 14px; font-size:15px; color:var(--muted); }
+.family .pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; flex:1; }
+.family .pair .card { border-width:1.5px; }
+.family .note { margin:14px 0 0; font-size:15px; color:var(--ink); }
+
+/* ---- Stat strip (first start) ---- */
+.firststart { background:var(--card); border-left:4px solid var(--teal); padding:16px 20px 18px; margin:24px 0 0; max-width:800px; }
+.firststart h3 { margin:0 0 8px; }
+.firststart p { margin:0; font-size:16px; }
+
+/* ---- The window, drawn as a schematic ---- */
+.window { max-width:800px; border:2px solid var(--ink); background:var(--card); margin:8px 0 18px; }
+.window .bar {
+  display:flex; align-items:center; gap:10px; padding:8px 12px;
+  border-bottom:2px solid var(--ink); background:var(--paper-2);
+  font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+}
+.window .bar .dir { flex:1; }
+.window .bar .btn { font-weight:600; color:var(--paper); background:var(--teal-deep); padding:3px 10px; letter-spacing:.12em; }
+.pane { display:grid; grid-template-columns:42px 170px 1fr; gap:0 16px; padding:14px 16px; border-bottom:1px solid #d4cab5; align-items:baseline; }
+.pane:last-child { border-bottom:0; }
+.pane .n { font-family:var(--display); font-size:22px; color:var(--sage); line-height:1; }
+.pane .name { font-family:var(--display); font-size:13px; color:var(--teal-deep); }
+.pane .what { font-size:15.5px; }
+.btnword { font-family:var(--mono); font-size:.86em; font-weight:600; border:1px solid var(--teal-deep); color:var(--teal-deep); padding:0 6px; white-space:nowrap; }
+
+/* ---- Voice prefixes: a two-by-two key ---- */
+.key { display:grid; grid-template-columns:auto 1fr 1fr; max-width:460px; border:2px solid var(--ink); margin:18px 0 10px; font-size:15px; }
+.key > div { padding:8px 12px; border-right:1px solid #d4cab5; border-bottom:1px solid #d4cab5; background:var(--card); }
+.key > div:nth-child(3n) { border-right:0; }
+.key > div:nth-last-child(-n+3) { border-bottom:0; }
+.key .h { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); background:var(--paper-2); font-weight:600; }
+.key code { font-size:14px; }
+
+/* ---- Clause figure ---- */
+figure.clause { margin:20px 0 6px; max-width:800px; background:var(--card); border:2px solid var(--ink); padding:16px 18px 12px; }
+figure.clause svg { width:100%; height:auto; display:block; }
+figure.clause figcaption { font-family:var(--mono); font-size:11.5px; color:var(--muted); letter-spacing:.02em; margin-top:8px; }
+
+/* ---- Numbered steps ---- */
+ol.steps { list-style:none; counter-reset:step; padding:0; margin:18px 0; max-width:800px; }
+ol.steps > li { counter-increment:step; position:relative; padding:4px 0 16px 58px; }
+ol.steps > li::before {
+  content:counter(step); position:absolute; left:0; top:0; width:38px; height:38px;
+  border:2px solid var(--teal-deep); color:var(--teal-deep); font-family:var(--display); font-size:15px;
+  display:flex; align-items:center; justify-content:center; background:var(--card);
+}
+ol.steps > li:not(:last-child)::after { content:""; position:absolute; left:19px; top:40px; bottom:2px; width:2px; background:var(--sage); }
+ol.steps pre { margin:12px 0 0; }
+
+/* ---- Callout ---- */
+.callout {
+  border-left:4px solid var(--teal); background:var(--card); padding:14px 18px;
+  margin:20px 0; font-size:15.5px; max-width:800px;
+}
+.callout.warn { border-left-color:var(--red); }
+
+/* ---- Command table ---- */
+.tablewrap { overflow-x:auto; margin:18px 0; border:2px solid var(--ink); background:var(--card); }
+table { border-collapse:collapse; width:100%; font-size:15px; }
+th { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); text-align:left; background:var(--paper-2); padding:9px 14px; border-bottom:2px solid var(--ink); }
+td { padding:10px 14px; border-bottom:1px solid #d4cab5; vertical-align:top; }
+tr:last-child td { border-bottom:0; }
+td:first-child { white-space:nowrap; }
+td code { background:none; padding:0; color:var(--teal-deep); }
+
+/* ---- Privacy: one row per sentence ---- */
+dl.facts { max-width:800px; margin:14px 0; border-top:2px solid var(--ink); }
+dl.facts > div { display:grid; grid-template-columns:150px 1fr; gap:16px; padding:12px 0; border-bottom:1px solid #d4cab5; }
+dl.facts dt { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:600; padding-top:4px; }
+dl.facts dd { margin:0; font-size:16px; }
+
+/* ---- Troubleshooting: symptom beside remedy ---- */
+ul.trouble { list-style:none; padding:0; margin:14px 0; max-width:880px; border-top:2px solid var(--ink); }
+ul.trouble li { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,6fr); gap:20px; padding:13px 0; border-bottom:1px solid #d4cab5; font-size:16px; }
+ul.trouble .sym { font-weight:600; position:relative; padding-left:20px; }
+ul.trouble .sym::before { content:""; position:absolute; left:0; top:.45em; width:9px; height:9px; background:var(--teal); }
+
+/* ---- Code ---- */
+pre { background:var(--code); color:var(--code-text); padding:16px 18px; overflow:auto; font-family:var(--mono); font-size:13px; line-height:1.5; max-width:800px; }
+code { font-family:var(--mono); font-size:.92em; background:var(--paper-2); padding:1px 5px; }
+pre code { background:none; padding:0; font-size:inherit; }
+
+/* ---- Footer ---- */
+footer.site {
+  margin-top:64px; border-top:3px solid var(--ink); padding-top:20px;
+  font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.03em;
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+}
+
+/* ---- Responsive collapse ---- */
+@media (max-width:680px) {
+  .routes, .family .pair { grid-template-columns:1fr; }
+  .hero h1 { font-size:25px; }
+  header.site { padding:18px 0; margin-bottom:32px; }
+  .pane { grid-template-columns:34px 1fr; }
+  .pane .what { grid-column:2; margin-top:4px; }
+  dl.facts > div { grid-template-columns:1fr; gap:4px; }
+  ul.trouble li { grid-template-columns:1fr; gap:4px; }
+  td:first-child { white-space:normal; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <!-- logo-only mark: pure shapes, no font dependency (see the handbook's docs/brand.md) -->
+    <svg class="mark" viewBox="60 115 170 170" role="img" aria-label="ParkviewLab" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(200,200)">
+        <rect x="-88.572067" y="39.569824" width="9" height="28" fill="#90b095"/>
+        <circle cx="-83" cy="10" r="30" fill="#90b095"/>
+        <circle cx="-111" cy="20" r="22" fill="#90b095"/>
+        <circle cx="-55" cy="18" r="21" fill="#90b095"/>
+        <circle cx="-119" cy="4" r="16" fill="#90b095"/>
+        <circle cx="-47" cy="6" r="15" fill="#90b095"/>
+        <circle cx="-99" cy="-14" r="24" fill="#90b095"/>
+        <circle cx="-71" cy="-22" r="20" fill="#90b095"/>
+        <circle cx="-103" cy="-32" r="16" fill="#90b095"/>
+        <circle cx="-79" cy="-38" r="15" fill="#90b095"/>
+        <circle cx="-59" cy="-14" r="13" fill="#90b095"/>
+        <rect x="-5.820663" y="39.498325" width="6" height="22" fill="#90b095"/>
+        <circle cx="-2" cy="26" r="17" fill="#90b095"/>
+        <circle cx="-19" cy="29" r="13" fill="#90b095"/>
+        <circle cx="14" cy="27" r="12" fill="#90b095"/>
+        <circle cx="-11" cy="12" r="13" fill="#90b095"/>
+        <circle cx="7" cy="13" r="14" fill="#90b095"/>
+        <circle cx="-4.2837896" cy="-2.7139649" r="11" fill="#90b095"/>
+        <circle cx="6" cy="-2.14414" r="7" fill="#90b095"/>
+        <g transform="matrix(0.84873049,0,0,0.84873049,-48.542203,6.0416091)">
+          <path d="m -16,-78 a 28,28 0 0 1 32,0" fill="none" stroke="#00C2C7" stroke-width="4" stroke-linecap="square"/>
+          <path d="m -28,-88 a 46,46 0 0 1 56,0" fill="none" stroke="#00C2C7" stroke-width="2.5" stroke-linecap="square"/>
+          <polyline points="0,-28 0,-36 0,-62" fill="none" stroke="#00C2C7" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter"/>
+          <polyline points="24,-14 32,-22 53.7,-28" fill="none" stroke="#00C2C7" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter"/>
+          <polyline points="-24,-14 -32,-22 -53.7,-28" fill="none" stroke="#00C2C7" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter"/>
+          <polyline points="0,28 0,35 0,56" fill="none" stroke="#00C2C7" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"/>
+          <polyline points="24,14 30,20 46,28" fill="none" stroke="#00C2C7" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"/>
+          <polyline points="-24,14 -30,20 -46,28" fill="none" stroke="#00C2C7" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"/>
+          <circle cx="0" cy="-62" r="11" fill="#00C2C7"/><circle cx="0" cy="-62" r="5" fill="#004f52"/>
+          <circle cx="53.7" cy="-31" r="11" fill="#00C2C7"/><circle cx="53.7" cy="-31" r="5" fill="#004f52"/>
+          <circle cx="-53.7" cy="-31" r="11" fill="#00C2C7"/><circle cx="-53.7" cy="-31" r="5" fill="#004f52"/>
+          <circle cx="0" cy="56" r="9" fill="#00C2C7"/><circle cx="0" cy="56" r="4" fill="#004f52"/>
+          <circle cx="46" cy="28" r="9" fill="#00C2C7"/><circle cx="46" cy="28" r="4" fill="#004f52"/>
+          <circle cx="-46" cy="28" r="9" fill="#00C2C7"/><circle cx="-46" cy="28" r="4" fill="#004f52"/>
+          <polygon points="0,-28 24,-14 24,14 0,28 -24,14 -24,-14" fill="#00C2C7"/>
+          <polygon points="0,-23 20,-11.5 20,11.5 0,23 -20,11.5 -20,-11.5" fill="#004f52"/>
+          <line x1="0" y1="-23" x2="0" y2="23" stroke="#00C2C7" stroke-width="3" stroke-linecap="square"/>
+        </g>
+      </g>
+    </svg>
+    <span class="word">ParkviewLab<small>phonorheos</small></span>
+    <a class="dl" href="../downloads/">Download</a>
+  </header>
+
+  <div class="hero">
+    <h1>phonorheos user manual</h1>
+    <div class="rule"></div>
+    <p class="lede">phonorheos is a desktop app for macOS and Linux that speaks the text other apps send it. It keeps one queue, so that two apps never talk over each other, and it makes its speech on your own machine with Kokoro, an open-weight voice. This manual is for using it. The <a href="https://github.com/ParkviewLab/phonorheos#readme">README</a> describes the interface for programmers and how the app is built.</p>
+  </div>
+
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#installing">Installing</a></li>
+      <li><a href="#the-window">The window</a></li>
+      <li><a href="#voices-and-speed">Voices and speed</a></li>
+      <li><a href="#words">Words it says wrongly</a></li>
+      <li><a href="#network">Other machines on your network</a></li>
+      <li><a href="#command">The command</a></li>
+      <li><a href="#login">Starting at login</a></li>
+      <li><a href="#privacy">Privacy</a></li>
+      <li><a href="#trouble">When something goes wrong</a></li>
+    </ol>
+  </nav>
+
+  <!-- ===================================================== INSTALLING -->
+  <section id="installing">
+    <h2>Installing</h2>
+
+    <div class="routes">
+      <div class="card ac-teal">
+        <div class="kind">.dmg</div>
+        <h3>macOS</h3>
+        <p class="req">phonorheos needs macOS 15 or later on Apple silicon.</p>
+        <ol>
+          <li>Download <code>phonorheos-&lt;version&gt;-macos-arm64.dmg</code> from the <a href="../downloads/">download page</a> or the repository's <a href="https://github.com/ParkviewLab/phonorheos/releases">Releases page</a>.</li>
+          <li>Open the disk image and drag phonorheos onto the Applications shortcut.</li>
+          <li>Open phonorheos from Applications. It is signed and notarised, so macOS opens it without a warning.</li>
+        </ol>
+      </div>
+
+      <div class="family">
+        <h3>Ubuntu and other Linux</h3>
+        <p>phonorheos is built for x86_64 Linux, on Ubuntu 24.04; its <code>.deb</code> has been tried on Ubuntu Desktop 26.04.</p>
+        <div class="pair">
+          <div class="card ac-sage">
+            <div class="kind">.deb</div>
+            <h3>The package</h3>
+            <p>Download <code>phonorheos-&lt;version&gt;-linux-amd64.deb</code> and install it with <code>sudo apt install ./phonorheos-&lt;version&gt;-linux-amd64.deb</code>. phonorheos appears in the app menu, and the <code>phonorheos</code> command is on your path.</p>
+          </div>
+          <div class="card ac-sage">
+            <div class="kind">.AppImage</div>
+            <h3>The AppImage</h3>
+            <p>Download <code>phonorheos-&lt;version&gt;-linux-amd64.AppImage</code>, make it executable with <code>chmod +x</code>, and open it. Nothing is installed. It has not yet been tried on a desktop.</p>
+          </div>
+        </div>
+        <p class="note">The Linux build makes speech on the processor, not on a graphics card.</p>
+      </div>
+    </div>
+
+    <div class="firststart">
+      <h3>The first start</h3>
+      <p>The first time it opens, phonorheos downloads its speech model and its 28 voices from Hugging Face, about 330 MB, and shows the progress in its window. After that it starts and speaks without the network. The app itself is large, about 930 MB once installed, because it carries its own Python with PyTorch, which runs the voice.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== THE WINDOW -->
+  <section id="the-window">
+    <h2>The window</h2>
+    <p class="prose">From top to bottom, the window shows:</p>
+
+    <div class="window" role="list">
+      <div class="bar"><span class="dir">phonorheos</span><span class="btn">Stop</span></div>
+      <div class="pane" role="listitem">
+        <span class="n">1</span><span class="name">The state line</span>
+        <span class="what">ready; speaking, and for which client; downloading the voice; or, if the voice stopped, why. A stopped voice is started again on its own.</span>
+      </div>
+      <div class="pane" role="listitem">
+        <span class="n">2</span><span class="name">Voice</span>
+        <span class="what">the voice and speed used for text that names none, the clause setting (<a href="#clause">below</a>), and a line where you can type something and press <span class="btnword">Say it</span> to hear it.</span>
+      </div>
+      <div class="pane" role="listitem">
+        <span class="n">3</span><span class="name">Queue</span>
+        <span class="what">what is being spoken and what waits. <span class="btnword">Withdraw</span> removes one item; <span class="btnword">Stop</span>, at the top of the window, silences everything at once.</span>
+      </div>
+      <div class="pane" role="listitem">
+        <span class="n">4</span><span class="name">Clients</span>
+        <span class="what">the apps reading phonorheos's event stream.</span>
+      </div>
+      <div class="pane" role="listitem">
+        <span class="n">5</span><span class="name">Recently spoken</span>
+        <span class="what">the last 50 pieces of text, with who sent each, and whether it was cancelled or failed.</span>
+      </div>
+    </div>
+
+    <p class="prose"><span class="btnword">Settings</span> opens the words, the network and starting at login. Closing the window quits phonorheos; nothing keeps running in the background.</p>
+  </section>
+
+  <!-- ===================================================== VOICES AND SPEED -->
+  <section id="voices-and-speed">
+    <h2>Voices and speed</h2>
+    <div class="prose">
+      <p>phonorheos offers Kokoro's 28 English voices. A name beginning <code>bm_</code> or <code>bf_</code> is a British male or female voice, and <code>am_</code> or <code>af_</code> an American one. <code>bm_lewis</code> is the default. Whichever voice speaks, words are pronounced the British way.</p>
+    </div>
+
+    <div class="key" aria-label="Voice name prefixes">
+      <div class="h"></div><div class="h">male</div><div class="h">female</div>
+      <div class="h">British</div><div><code>bm_</code></div><div><code>bf_</code></div>
+      <div class="h">American</div><div><code>am_</code></div><div><code>af_</code></div>
+    </div>
+
+    <div class="prose">
+      <p>The speed runs from 0.5 (half) to 2 (double). The voice and speed in the window apply to any text that does not name its own; an app may name a voice and a speed for each piece it sends.</p>
+    </div>
+
+    <h3 id="clause">Speak each clause as soon as it is made</h3>
+    <div class="prose">
+      <p>Kokoro makes a piece of speech in one pass, so nothing sounds until the first piece is made. For a long sentence that can take two or three seconds. With <span class="ui">Speak each clause as soon as it is made</span> ticked, phonorheos cuts the text after every comma and full stop and at every line break, and starts speaking as soon as the first clause is ready, in about a fifth of a second. The cost is a pause after each clause: one long sentence, spoken whole in 55 seconds, took 78 seconds cut into clauses.</p>
+    </div>
+
+    <figure class="clause">
+      <svg viewBox="0 0 780 196" role="img" aria-labelledby="clause-t" xmlns="http://www.w3.org/2000/svg">
+        <title id="clause-t">One long sentence: 55 seconds spoken whole, 78 seconds cut into clauses, with a pause after each clause.</title>
+        <!-- scale: 1 s = 8 px, from x = 100 -->
+        <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#5d6258">
+          <text x="0" y="40">whole</text>
+          <text x="0" y="112">by clause</text>
+        </g>
+        <!-- whole: one unbroken stretch of speech -->
+        <rect x="100" y="26" width="440" height="20" fill="#004f52"/>
+        <text x="548" y="41" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" fill="#141414">55 s</text>
+        <text x="100" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5d6258">nothing sounds until the first piece is made: for a long sentence that can take two or three seconds</text>
+        <!-- by clause: speech in pieces, a pause after each (pieces illustrative) -->
+        <g fill="#00C2C7">
+          <rect x="100" y="98" width="76" height="20"/>
+          <rect x="206" y="98" width="62" height="20"/>
+          <rect x="298" y="98" width="84" height="20"/>
+          <rect x="412" y="98" width="56" height="20"/>
+          <rect x="498" y="98" width="70" height="20"/>
+          <rect x="598" y="98" width="52" height="20"/>
+          <rect x="680" y="98" width="44" height="20"/>
+        </g>
+        <g fill="#E2483D">
+          <rect x="176" y="98" width="30" height="20"/>
+          <rect x="268" y="98" width="30" height="20"/>
+          <rect x="382" y="98" width="30" height="20"/>
+          <rect x="468" y="98" width="30" height="20"/>
+          <rect x="568" y="98" width="30" height="20"/>
+          <rect x="650" y="98" width="30" height="20"/>
+        </g>
+        <text x="732" y="113" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" fill="#141414">78 s</text>
+        <text x="100" y="138" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5d6258">starts speaking as soon as the first clause is ready, in about a fifth of a second</text>
+        <!-- legend -->
+        <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" fill="#5d6258">
+          <rect x="100" y="166" width="12" height="12" fill="#00C2C7"/><text x="118" y="176">a clause spoken</text>
+          <rect x="250" y="166" width="12" height="12" fill="#E2483D"/><text x="268" y="176">the pause after it</text>
+        </g>
+      </svg>
+      <figcaption>One long sentence, spoken whole in 55 seconds, took 78 seconds cut into clauses. Bars to scale in length; the number and size of the clauses are illustrative, and the times to first sound are the manual's general figures, not measurements of this sentence.</figcaption>
+    </figure>
+
+    <div class="prose">
+      <p>The setting is off by default. An app can choose for each piece it sends, whatever the window says (<code>"by_clause": true</code> or <code>false</code>), and so can the command (<code>--by-clause</code> or <code>--whole</code>).</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== WORDS -->
+  <section id="words">
+    <h2>Words it says wrongly</h2>
+    <p class="prose">Names and unusual words may come out wrongly. <span class="ui">Settings → Words</span> lists words with how each should be said:</p>
+
+    <ol class="steps">
+      <li>In <span class="ui">Word</span>, type the word as it is written, for example <code>Wooster</code>.</li>
+      <li>In <span class="ui">Said as</span>, type how to say it, either respelt in ordinary letters (<code>wuss ter</code>) or as phonemes between slashes (<code>/wˈuːstə/</code>).</li>
+      <li>Press <span class="btnword">Add</span>, then <span class="btnword">Say it</span> beside the entry to hear it, and change the respelling until it sounds right.</li>
+    </ol>
+
+    <p class="prose">The list starts with phonorheos's own name. A word that is neither in the list nor in the voice's dictionaries is pronounced from a model that predicts sounds from spelling, which is usually close and sometimes not.</p>
+  </section>
+
+  <!-- ===================================================== NETWORK -->
+  <section id="network">
+    <h2>Other machines on your network</h2>
+    <p class="prose">phonorheos normally hears only programs on its own machine. To let other machines send it text:</p>
+
+    <ol class="steps">
+      <li>Open <span class="ui">Settings → Network</span> and switch the network on. phonorheos listens on port 35861 and announces itself on the local network as <code>_phonorheos._tcp</code>.</li>
+      <li>Press <span class="btnword">Issue a token</span> and give it a name, such as the other machine's. The token is shown once: copy it then, and keep it as you would a password.</li>
+      <li>On the other machine, send text with the token in an <code>Authorization</code> header:
+<pre><code>curl -H 'Authorization: Bearer &lt;token&gt;' -H 'content-type: application/json' \
+  -d '{"text": "The build has finished."}' http://&lt;this-machine&gt;.local:35861/speak</code></pre>
+      </li>
+    </ol>
+
+    <p class="prose">The text appears in the queue under the token's name. Revoking the token in the same place refuses that machine's next request.</p>
+    <div class="callout warn">The network connection is plain HTTP, so use it only on a private home or lab network.</div>
+  </section>
+
+  <!-- ===================================================== THE COMMAND -->
+  <section id="command">
+    <h2>The command</h2>
+    <p class="prose">The <code>phonorheos</code> command talks to the running app and opens no window:</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>phonorheos say "Good evening."</code></td><td>Speaks the text, and waits until it has been spoken.</td></tr>
+          <tr><td><code>phonorheos say --no-wait "…"</code></td><td>Queues the text and returns at once.</td></tr>
+          <tr><td><code>phonorheos say --voice bf_emma --speed 1.2 "…"</code></td><td>Speaks in another voice or at another speed.</td></tr>
+          <tr><td><code>phonorheos say --by-clause "…"</code> or <code>--whole</code></td><td>Chooses how the text is cut, whatever the window's setting.</td></tr>
+          <tr><td><code>phonorheos stop</code></td><td>Silences everything.</td></tr>
+          <tr><td><code>phonorheos status</code></td><td>Prints the version, the voice's state, what is being spoken and how many items wait.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="prose">On Linux the package puts the command on your path. On macOS the command is the app itself; put it on your path once, with your password:</p>
+<pre><code>sudo mkdir -p /usr/local/bin &amp;&amp; sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos</code></pre>
+  </section>
+
+  <!-- ===================================================== LOGIN -->
+  <section id="login">
+    <h2>Starting at login</h2>
+    <p class="prose"><span class="ui">Settings → Starting</span> opens phonorheos when you log in, so that it is ready for apps that speak.</p>
+  </section>
+
+  <!-- ===================================================== PRIVACY -->
+  <section id="privacy">
+    <h2>Privacy</h2>
+    <dl class="facts">
+      <div><dt>Speech</dt><dd>Speech is made on your machine.</dd></div>
+      <div><dt>Text</dt><dd>The text phonorheos is sent is kept only in memory (in the queue, in the last 1000 events it reports to other programs, and in the window's list of 50) and is gone when it quits.</dd></div>
+      <div><dt>Event readers</dt><dd>Every program that reads phonorheos's events sees every piece of text, from whichever app it came.</dd></div>
+      <div><dt>Data folder</dt><dd>phonorheos's data folder (<code>~/Library/Application Support/phonorheos/</code> on macOS, <code>~/.local/share/phonorheos/</code> on Linux) holds the settings, the tokens as hashes rather than in readable form, and the downloaded voice.</dd></div>
+      <div><dt>Network</dt><dd>The network is used only to download the voice on the first start and, when you switch it on, to hear other machines on your network.</dd></div>
+    </dl>
+  </section>
+
+  <!-- ===================================================== TROUBLE -->
+  <section id="trouble">
+    <h2>When something goes wrong</h2>
+    <ul class="trouble">
+      <li><span class="sym">Nothing is heard, and the state line says ready.</span><span>Check the system's output device and volume; phonorheos plays through the default output.</span></li>
+      <li><span class="sym">The state line says the voice stopped.</span><span>phonorheos starts it again on its own and says why it stopped. If it keeps stopping, quit and reopen the app.</span></li>
+      <li><span class="sym">The first start never finishes downloading.</span><span>The voice comes from Hugging Face; check the network, then reopen the app to try again.</span></li>
+      <li><span class="sym"><code>phonorheos say</code> says it cannot connect.</span><span>The app is not running; open it first.</span></li>
+      <li><span class="sym">Another machine is refused.</span><span>Check that the network is switched on, that the token was copied whole and has not been revoked, and that the address and port 35861 are right.</span></li>
+      <li><span class="sym">A word sounds wrong.</span><span>Add it to the <a href="#words">word list</a>.</span></li>
+    </ul>
+  </section>
+
+  <footer class="site">
+    <span>© 2026 Gary Frattarola · ParkviewLab · phonorheos</span>
+    <span>CC-BY-4.0 · canonical source: docs/user-manual.md</span>
+  </footer>
+
+</div>
+</body>
+</html>

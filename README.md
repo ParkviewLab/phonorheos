@@ -11,7 +11,7 @@ The voice is [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M), an open-weight
 
 ## Status
 
-Version 0.1.0. Tried in use on a MacBook Air (macOS 26) and, from its `.deb`, on Ubuntu Desktop 26.04, including a client on the LAN holding a token; the Linux packages are built on Ubuntu 24.04. The AppImage has not yet been tried on a desktop.
+Tried in use on a MacBook Air (macOS 26) and, from its `.deb`, on Ubuntu Desktop 26.04, including a client on the LAN holding a token; the Linux packages are built on Ubuntu 24.04. The AppImage has not yet been tried on a desktop.
 
 It is the companion of [graptostream](https://github.com/ParkviewLab/graptostream): graptostream turns speech into text that apps can read; phonorheos turns text back into speech. Together they let an app, or an AI agent, be spoken to and answer aloud.
 
@@ -115,7 +115,7 @@ Speech is made on this machine. The text phonorheos is sent is kept only in memo
 
 ## Building
 
-The app is Rust (Tauri 2) with its voice in a Python helper that it starts and talks to over a pipe; see [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the layout and the checks. `scripts/build-app` builds the installers into `dist/` on either system: it prepares the bundled Python (`scripts/prepare-python`), writes the third-party notices, and runs Tauri. It needs Rust, `uv`, and the Tauri command-line tool (`cargo install tauri-cli --version "^2" --locked`); on Linux also WebKitGTK, ALSA's headers and FUSE (`libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev patchelf file libfuse2t64`). On macOS, `SIGN_IDENTITY` names the signing identity; without it the build is signed ad hoc.
+The app is Rust (Tauri 2) with its voice in a Python helper that it starts and talks to over a pipe; see [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the layout and the checks, and [`docs/why.md`](docs/why.md) for the requirements, the evidence and the decisions behind it. `scripts/build-app` builds the installers into `dist/` on either system: it prepares the bundled Python (`scripts/prepare-python`), writes the third-party notices, and runs Tauri. It needs Rust, `uv`, and the Tauri command-line tool (`cargo install tauri-cli --version "^2" --locked`); on Linux also WebKitGTK, ALSA's headers and FUSE (`libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev patchelf file libfuse2t64`). On macOS, `SIGN_IDENTITY` names the signing identity; without it the build is signed ad hoc.
 
 To run it while developing, give it a Python with the helper's voice installed:
 
