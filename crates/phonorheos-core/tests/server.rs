@@ -278,3 +278,49 @@ async fn on_the_lan_listener_a_local_caller_needs_no_token() {
     assert_eq!(curl(format!("127.0.0.1:{port}")).await, "200");
     assert_eq!(curl(format!("evil.example:{port}")).await, "403");
 }
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_second_server_leaves_a_live_socket_alone() {
+    let dir = std::env::temp_dir().join(format!("phonorheos-second-{}", std::process::id()));
+    let sock = dir.join("phonorheos.sock");
+    // A stale file, with no server behind it, is replaced.
+    std::fs::create_dir_all(&dir).unwrap();
+    drop(std::os::unix::net::UnixListener::bind(&sock).unwrap());
+    let first = core();
+    tokio::spawn({
+        let (c, sock) = (first.clone(), sock.clone());
+        async move { phonorheos_core::server::serve_socket(c, &sock).await }
+    });
+    for _ in 0..50 {
+        if tokio::net::UnixStream::connect(&sock).await.is_ok() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let second = tokio::time::timeout(
+        Duration::from_secs(2),
+        phonorheos_core::server::serve_socket(core(), &sock),
+    )
+    .await
+    .expect("the second server took the socket instead of refusing it");
+    let err = second.unwrap_err();
+    assert_eq!(err.kind(), std::io::ErrorKind::AddrInUse);
+    let out = tokio::process::Command::new("curl")
+        .args(["-s", "--unix-socket"])
+        .arg(&sock)
+        .args([
+            "-H",
+            "content-type: application/json",
+            "-d",
+            r#"{"text":"still here"}"#,
+        ])
+        .arg("http://localhost/speak")
+        .output()
+        .await
+        .unwrap();
+    let body: Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(body["id"].is_string(), "{body}");
+    assert_eq!(first.queue()[0].text, "still here");
+    let _ = std::fs::remove_dir_all(&dir);
+}
