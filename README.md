@@ -7,6 +7,9 @@ SPDX-License-Identifier: CC-BY-4.0
 
 A desktop app for macOS and Linux that speaks the text other apps send it. Apps on the same machine, or across the LAN, send text over a small HTTP interface; phonorheos queues it, so that two apps never talk over each other, and reports when each piece starts and finishes.
 
+Download: https://parkviewlab.github.io/phonorheos/downloads/  
+Documentation, including the [user manual](https://parkviewlab.github.io/phonorheos/docs/user-manual.html): https://parkviewlab.github.io/phonorheos/
+
 The voice is [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M), an open-weight speech model, with [misaki](https://github.com/hexgrad/misaki) turning text into phonemes. Speech is made on this machine. Text arrives from other machines only from LAN clients holding a token, when you switch that on.
 
 ## Status
@@ -17,7 +20,7 @@ It is the companion of [graptostream](https://github.com/ParkviewLab/graptostrea
 
 ## Requirements and install
 
-- **macOS:** 15 or later, on Apple silicon. Download `phonorheos-<version>-macos-arm64.dmg` from the [Releases](https://github.com/ParkviewLab/phonorheos/releases) page, open it, and drag phonorheos onto the Applications shortcut. It is signed with a Developer ID and notarised.
+- **macOS:** 15 or later, on Apple silicon. Download `phonorheos-<version>-macos-arm64.dmg` from the [download page](https://parkviewlab.github.io/phonorheos/downloads/) or the [Releases](https://github.com/ParkviewLab/phonorheos/releases) page, open it, and drag phonorheos onto the Applications shortcut. It is signed with a Developer ID and notarised.
 - **Linux:** x86_64, built for Ubuntu 24.04 and later (Ubuntu Desktop 26.04 is the one it is tested on). Either install the `.deb`, which adds phonorheos to the app menu and the `phonorheos` command to your path:
 
   ```bash
