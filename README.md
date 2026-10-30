@@ -11,7 +11,7 @@ The voice is [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M), an open-weight
 
 ## Status
 
-Version 0.1.0. Tried in use on a MacBook Air (macOS 26) and, from its `.deb`, on Ubuntu Desktop 26.04, including a client on the LAN holding a token; the Linux packages are built on Ubuntu 24.04. The AppImage has not yet been tried on a desktop.
+Tried in use on a MacBook Air (macOS 26) and, from its `.deb`, on Ubuntu Desktop 26.04, including a client on the LAN holding a token; the Linux packages are built on Ubuntu 24.04. The AppImage has not yet been tried on a desktop.
 
 It is the companion of [graptostream](https://github.com/ParkviewLab/graptostream): graptostream turns speech into text that apps can read; phonorheos turns text back into speech. Together they let an app, or an AI agent, be spoken to and answer aloud.
 
