@@ -8,13 +8,13 @@ phonorheos is a desktop app for macOS and Linux that speaks the text other apps 
 
 phonorheos needs macOS 15 or later on Apple silicon.
 
-1. Download `phonorheos-<version>-macos-arm64.dmg` from the download page or the repository's Releases page.
+1. Download `phonorheos-<version>-macos-arm64.dmg` from the download page or the repository's [Releases page](https://github.com/ParkviewLab/phonorheos/releases).
 2. Open the disk image and drag phonorheos onto the Applications shortcut.
 3. Open phonorheos from Applications. It is signed and notarised, so macOS opens it without a warning.
 
 ### Ubuntu and other Linux
 
-phonorheos is built for x86_64 Linux, on Ubuntu 24.04, and is tried on Ubuntu Desktop 26.04.
+phonorheos is built for x86_64 Linux, on Ubuntu 24.04; its `.deb` has been tried on Ubuntu Desktop 26.04.
 
 - **The package:** download `phonorheos-<version>-linux-amd64.deb` and install it with `sudo apt install ./phonorheos-<version>-linux-amd64.deb`. phonorheos appears in the app menu, and the `phonorheos` command is on your path.
 - **The AppImage:** download `phonorheos-<version>-linux-amd64.AppImage`, make it executable with `chmod +x`, and open it. Nothing is installed. It has not yet been tried on a desktop.
@@ -99,7 +99,7 @@ sudo mkdir -p /usr/local/bin && sudo ln -sf /Applications/phonorheos.app/Content
 
 ## Privacy
 
-Speech is made on your machine. The text phonorheos is sent is kept only in memory (in the queue, in the recent events and in the window's list of 50) and is gone when it quits. Every program that reads phonorheos's events sees every piece of text, from whichever app it came. Its data folder holds the settings, the tokens as hashes rather than in readable form, and the downloaded voice. The network is used only to download the voice on the first start and, when you switch it on, to hear other machines on your network.
+Speech is made on your machine. The text phonorheos is sent is kept only in memory (in the queue, in the last 1000 events it reports to other programs, and in the window's list of 50) and is gone when it quits. Every program that reads phonorheos's events sees every piece of text, from whichever app it came. phonorheos's data folder (`~/Library/Application Support/phonorheos/` on macOS, `~/.local/share/phonorheos/` on Linux) holds the settings, the tokens as hashes rather than in readable form, and the downloaded voice. The network is used only to download the voice on the first start and, when you switch it on, to hear other machines on your network.
 
 ## When something goes wrong
 
@@ -109,3 +109,6 @@ Speech is made on your machine. The text phonorheos is sent is kept only in memo
 - **`phonorheos say` says it cannot connect.** The app is not running; open it first.
 - **Another machine is refused.** Check that the network is switched on, that the token was copied whole and has not been revoked, and that the address and port 35861 are right.
 - **A word sounds wrong.** Add it to the word list.
+
+---
+<sub>© 2026 Gary Frattarola · Licensed under [CC-BY-4.0](../LICENSES/CC-BY-4.0.txt)</sub>
