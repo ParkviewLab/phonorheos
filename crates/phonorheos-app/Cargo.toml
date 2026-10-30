@@ -1,0 +1,31 @@
+[package]
+name = "phonorheos-app"
+description = "phonorheos: speaks the text other apps send it"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "phonorheos"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+base64 = "0.23.1"
+cpal = "0.18"
+mdns-sd = "0.21"
+phonorheos-cli = { version = "0.0.0", path = "../phonorheos-cli" }
+phonorheos-core = { version = "0.0.0", path = "../phonorheos-core" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tauri = "2"
+tauri-plugin-autostart = "2"
+tokio = { version = "1.54.1", features = ["full"] }

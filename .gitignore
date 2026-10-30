@@ -1,0 +1,14 @@
+target/
+dist/
+spikes/target/
+helper/.venv/
+helper/build/
+__pycache__/
+*.pyc
+.DS_Store
+notarization.json
+.pytest_cache/
+.ruff_cache/
+crates/phonorheos-app/gen/
+crates/phonorheos-app/python/
+crates/phonorheos-app/THIRD-PARTY-NOTICES.txt

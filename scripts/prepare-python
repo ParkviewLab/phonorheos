@@ -1,0 +1,32 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Puts the Python the app carries into crates/phonorheos-app/python: a standalone
+# Python 3.12 (python-build-standalone, through uv) with the helper and its voice
+# installed by `uv sync` exactly as helper/uv.lock pins them. espeak-ng is kept out by
+# the override in helper/pyproject.toml, and checked for here. On macOS, with
+# SIGN_IDENTITY set, every compiled file is signed with the hardened runtime and a
+# timestamp, as notarisation requires.
+set -e
+cd "$(dirname "$0")/.."
+OUT=crates/phonorheos-app/python
+uv python install 3.12
+SRC=$(dirname "$(dirname "$(uv python find --managed-python 3.12)")")
+rm -rf "$OUT"
+cp -RL "$SRC" "$OUT"
+UV_PROJECT_ENVIRONMENT="$PWD/$OUT" uv sync --project helper --frozen --extra voice --no-dev --no-editable
+find "$OUT" -name __pycache__ -prune -exec rm -rf {} +
+if ls "$OUT"/lib/python3.12/site-packages | grep -iE '^(espeak|phonemizer)'; then
+  echo "espeak-ng or phonemizer found in the bundled Python" >&2
+  exit 1
+fi
+du -sh "$OUT"
+if [ "$(uname)" = Darwin ] && [ -n "$SIGN_IDENTITY" ]; then
+  find "$OUT" -type f \( -name '*.so' -o -name '*.dylib' -o -perm +111 \) | while IFS= read -r f; do
+    if file "$f" | grep -q Mach-O; then
+      codesign --force --timestamp --options runtime --sign "$SIGN_IDENTITY" "$f"
+    fi
+  done
+  echo "signed the compiled files with $SIGN_IDENTITY"
+fi
