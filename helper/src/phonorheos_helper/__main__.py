@@ -14,7 +14,7 @@ import threading
 from collections.abc import Iterator
 from typing import Any, Protocol
 
-from . import protocol, words
+from . import clock, protocol, words
 from .protocol import ProtocolError, Writer
 
 
@@ -87,7 +87,7 @@ class Helper:
                 self.load()
             if self._table is None:
                 self._table = words.table(self.words, self.engine.phonemes)
-            text = words.apply_table(msg["text"], self._table)
+            text = words.apply_table(clock.say_times(msg["text"]), self._table)
             voice = str(msg.get("voice") or "bm_lewis")
             speed = float(msg.get("speed") or 1.0)
             by_clause = bool(msg.get("by_clause", False))
