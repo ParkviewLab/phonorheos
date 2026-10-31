@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.3.1] - 2026-10-31
+
+### Highlights
+
+Clock times are now spoken correctly: the helper rewrites them as words before phonemisation, so "10:43 AM" is read as "ten forty-three AM", "5:07 p.m." as "five oh seven PM", "17:00" as "seventeen hundred", and "00:00" as "midnight", with seconds rendered as "and twenty-five seconds". Previously such times came out as garbled syllables. Ratios, version numbers, IPv6 addresses and impossible hours are left untouched, and a full stop following "p.m." at the end of a sentence is preserved.
+
+### Bug fixes
+
+- Say clock times as words (#24)
+
 ## [v0.3.0] - 2026-10-31
 
 ### Highlights
