@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.3.0] - 2026-10-31
+
+### Highlights
+
+`POST /speak`, the MCP `say` tool and the `phonorheos say` command now accept `cache` (default false) to keep synthesised speech and `speak` (default true) to control whether it plays immediately; setting `speak: false, cache: true` prepares a phrase silently so a later request for the same text, voice, speed and cutting plays it without going back to the helper. Setting both to false is rejected with a 400. The cache lives in memory, is capped at 32 MB with least recently used entries dropped first, and is emptied whenever the word list changes. The user manual gains a "Phrases that play at once" section, and the command table, MCP notes and README API table are updated.
+
+### Features
+
+- Keep speech on request so repeated phrases play at once (#22)
+
 ## [v0.2.0] - 2026-10-30
 
 ### Highlights
