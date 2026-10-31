@@ -93,6 +93,16 @@ On Linux the package puts the command on your path. On macOS the command is the 
 sudo mkdir -p /usr/local/bin && sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos
 ```
 
+## From Claude Code and other MCP clients
+
+phonorheos is also a Model Context Protocol server, at `http://127.0.0.1:35861/mcp`, so that an AI assistant can speak with a tool rather than a command. Register it once in Claude Code:
+
+```bash
+claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp
+```
+
+A session started afterwards has two tools: `say`, which speaks text (optionally in another voice or at another speed) and returns as soon as it is queued, and `stop`, which silences everything. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
+
 ## Starting at login
 
 **Settings → Starting** opens phonorheos when you log in, so that it is ready for apps that speak.
