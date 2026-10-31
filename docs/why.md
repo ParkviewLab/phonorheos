@@ -45,6 +45,11 @@ Two risks were tried before the app was built on them, on a branch since deleted
 - Kokoro makes each piece's audio in one pass, so nothing plays until the first piece is made, and a piece may be up to 510 phonemes. Measured on pacific with one sentence of about 170 words: the first sound came 2.3 to 2.8 s after the request when the text was given whole, and 0.21 to 0.23 s when it was cut clause by clause; but cut, the speech lasted 77.7 s instead of 55.3 s, from the pauses between its 30 pieces.
 - v0.1.0, installed from its notarised disk image on pacific, spoke two queued items in turn without overlap.
 
+### Speaking from a Claude Code session (2026-10-30)
+
+- Through the shell, each answer costs the session a command, its flags, shell quoting and the Bash tool's description, and a permission check; through `curl`, also a URL, a header and a JSON body inside shell quotes. The transports themselves differ by milliseconds: five `status` requests by the command and by `curl` each took under 10 ms.
+- An MCP tool call carries the tool's name and the text, and nothing else.
+
 ## Decisions
 
 All rulings are the owner's.
@@ -65,4 +70,8 @@ All rulings are the owner's.
 | D12 | No change to graptostream to ignore phonorheos's speech: spoken names direct its text, so speech heard by a microphone reaches no app unless it begins with a name | 2026-10-29 | |
 | D13 | A handbook document on the Tauri stack and the bundled Python, after the release | 2026-10-29 | |
 | W1 | Weak copyleft (MPL-2.0, LGPL) accepted for components carried unmodified; GPL and AGPL still refused by the build | 2026-10-29 | `LICENSING.md` lists them |
+| M1 | An MCP endpoint at `POST /mcp`, served by the app itself with `rmcp` (the official Rust SDK, Apache-2.0), stateless with JSON replies, so that a session speaks by a tool call of a few tokens instead of a shell command; no stdio bridge, as slower | 2026-10-30 | A call reaches the queue in a median 0.33 ms (debug build, pacific) |
+| M2 | On every listener: the socket, `127.0.0.1` and, when switched on, the LAN behind its tokens | 2026-10-30 | |
+| M3 | Two tools only, `say` (returning once queued) and `stop`, since each tool's description is read into every connected session's context | 2026-10-30 | |
+| M4 | Sessions on the owner's machines connected at user scope, with both tools allowed without a prompt | 2026-10-30 | |
 | C1 | Cutting text at ", ", ". " and line breaks, so that the first piece is short, kept as a setting, off by default, with a per-request `by_clause` and the command's `--by-clause` and `--whole` | 2026-10-29 | The pauses between pieces make it a choice, not a default |

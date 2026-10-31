@@ -281,6 +281,7 @@ footer.site {
       <li><a href="#words">Words it says wrongly</a></li>
       <li><a href="#network">Other machines on your network</a></li>
       <li><a href="#command">The command</a></li>
+      <li><a href="#mcp">From Claude Code and other MCP clients</a></li>
       <li><a href="#login">Starting at login</a></li>
       <li><a href="#privacy">Privacy</a></li>
       <li><a href="#trouble">When something goes wrong</a></li>
@@ -481,6 +482,14 @@ footer.site {
 
     <p class="prose">On Linux the package puts the command on your path. On macOS the command is the app itself; put it on your path once, with your password:</p>
 <pre><code>sudo mkdir -p /usr/local/bin &amp;&amp; sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos</code></pre>
+  </section>
+
+  <!-- ===================================================== MCP -->
+  <section id="mcp">
+    <h2>From Claude Code and other MCP clients</h2>
+    <p class="prose">phonorheos is also a Model Context Protocol server, at <code>http://127.0.0.1:35861/mcp</code>, so that an AI assistant can speak with a tool rather than a command. Register it once in Claude Code:</p>
+<pre><code>claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp</code></pre>
+    <p class="prose">A session started afterwards has two tools: <code>say</code>, which speaks text (optionally in another voice or at another speed) and returns as soon as it is queued, and <code>stop</code>, which silences everything. phonorheos must be running when the session starts. From another machine, use <code>http://&lt;this-machine&gt;.local:35861/mcp</code> with the network switched on and a token, given to the client as an <code>Authorization: Bearer &lt;token&gt;</code> header (in Claude Code, <code>--header "Authorization: Bearer &lt;token&gt;"</code>).</p>
   </section>
 
   <!-- ===================================================== LOGIN -->
