@@ -48,6 +48,7 @@ function stateLine(s) {
   }
   if (v.state === "starting") return ["busy", "Starting the voice…"];
   if (v.state === "failed") return ["failed", `The voice stopped: ${v.detail || "unknown"}. Restarting…`];
+  if (speaking && speaking.speak === false) return ["busy", `Preparing speech to keep for ${speaking.client}`];
   if (speaking) return ["busy", `Speaking for ${speaking.client}`];
   return ["ready", "Ready"];
 }
@@ -67,7 +68,7 @@ function draw(s) {
 
   list("queue", s.queue, "Nothing to say.", (i) =>
     el("li", { class: i.state },
-      el("span", { class: "meta" }, i.state === "speaking" ? "speaking" : "waiting"),
+      el("span", { class: "meta" }, i.state !== "speaking" ? "waiting" : i.speak === false ? "preparing" : "speaking"),
       el("span", { class: "text" }, i.text),
       el("span", { class: "meta" }, i.client),
       el("button", { class: "small", onclick: () => invoke("withdraw", { id: i.id }) }, "Withdraw")));

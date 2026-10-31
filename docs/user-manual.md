@@ -49,6 +49,19 @@ Kokoro makes a piece of speech in one pass, so nothing sounds until the first pi
 
 The setting is off by default. An app can choose for each piece it sends, whatever the window says (`"by_clause": true` or `false`), and so can the command (`--by-clause` or `--whole`).
 
+### Phrases that play at once
+
+Some apps say the same short phrase again and again. Peabody, which answers spoken questions with a language model, says "One moment please..." or a phrase like it as soon as it hears a question, so that the wait for the model is not silent. Made afresh each time, even a short phrase takes a moment, and on a slow machine that moment is the delay the phrase is meant to cover. So an app can ask phonorheos to keep the speech for a text, and the next time that text arrives in the same voice, at the same speed and cut the same way, phonorheos plays the kept speech at once instead of making it again.
+
+Nothing is kept unless an app asks. Each piece an app sends can carry two choices:
+
+- **`cache`:** keep the speech once it is made. Off unless asked for.
+- **`speak`:** play it now. On unless turned off.
+
+An app prepares its phrases with `cache` on and `speak` off: phonorheos makes them in the queue's turn without a sound. When it wants one, it sends the same text with both on; if the speech is kept, it plays at once, and if it is not (phonorheos has restarted since), it is made, played and kept again. A piece with both off does nothing and is refused.
+
+The kept speech lives in memory, so it is gone when phonorheos quits. It is limited to 32 MB, about five and a half minutes of speech; when it is full, the phrase used least recently is dropped. Changing the list of **Words it says wrongly** empties it, since kept speech would still say the words the old way.
+
 ## Words it says wrongly
 
 Names and unusual words may come out wrongly. **Settings → Words** lists words with how each should be said:
@@ -84,6 +97,8 @@ The `phonorheos` command talks to the running app and opens no window:
 | `phonorheos say --no-wait "…"` | Queues the text and returns at once. |
 | `phonorheos say --voice bf_emma --speed 1.2 "…"` | Speaks in another voice or at another speed. |
 | `phonorheos say --by-clause "…"` or `--whole` | Chooses how the text is cut, whatever the window's setting. |
+| `phonorheos say --cache "…"` | Speaks the text and keeps its speech, so that it plays at once next time (see "Phrases that play at once"). |
+| `phonorheos say --cache --silent "…"` | Makes and keeps the speech without playing it. |
 | `phonorheos stop` | Silences everything. |
 | `phonorheos status` | Prints the version, the voice's state, what is being spoken and how many items wait. |
 
@@ -101,7 +116,7 @@ phonorheos is also a Model Context Protocol server, at `http://127.0.0.1:35861/m
 claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp
 ```
 
-A session started afterwards has two tools: `say`, which speaks text (optionally in another voice or at another speed) and returns as soon as it is queued, and `stop`, which silences everything. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
+A session started afterwards has two tools: `say`, which speaks text (optionally in another voice or at another speed, and with the `speak` and `cache` choices described under "Phrases that play at once") and returns as soon as it is queued, and `stop`, which silences everything. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
 
 ## Starting at login
 

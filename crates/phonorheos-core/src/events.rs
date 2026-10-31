@@ -57,16 +57,38 @@ pub struct Event {
     pub voice: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
+    /// Present, and false, for an item that is only made to be cached: it has no
+    /// `started` event.
+    #[serde(skip_serializing_if = "is_true")]
+    pub speak: bool,
+}
+
+fn is_true(b: &bool) -> bool {
+    *b
 }
 
 /// The fields of an event other than its number and time.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Draft {
     pub item: String,
     pub client: String,
     pub text: Option<String>,
     pub voice: Option<String>,
     pub reason: Option<String>,
+    pub speak: bool,
+}
+
+impl Default for Draft {
+    fn default() -> Self {
+        Self {
+            item: String::new(),
+            client: String::new(),
+            text: None,
+            voice: None,
+            reason: None,
+            speak: true,
+        }
+    }
 }
 
 const BUFFER: usize = 1000;
@@ -112,6 +134,7 @@ impl EventHub {
             text: d.text,
             voice: d.voice,
             reason: d.reason,
+            speak: d.speak,
         };
         inner.next += 1;
         if inner.recent.len() == BUFFER {

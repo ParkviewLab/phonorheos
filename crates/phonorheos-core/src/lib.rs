@@ -5,6 +5,7 @@
 //! events, and the HTTP interface that apps reach it by.
 
 pub mod access;
+pub mod cache;
 pub mod clock;
 pub mod core;
 pub mod events;
