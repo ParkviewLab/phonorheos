@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.2.0] - 2026-10-30
+
+### Highlights
+
+phonorheos now serves the Model Context Protocol at `POST /mcp`, exposing two tools, `say` (with optional voice and speed, returning the queued item's id and how many are ahead of it) and `stop`, so an agent can speak through a tool call rather than a shell command. The endpoint is stateless, accepts POST only, and sits behind the same access checks as the rest of the server — the socket, `127.0.0.1`, and the LAN with its tokens, where a token's name becomes the item's client. Request validation is now shared with `POST /speak`, so both refuse the same requests for the same reasons and enforce the same 256 KiB body limit; the README, user manual, and `docs/why.md` cover the new endpoint.
+
+### Features
+
+- Serve the Model Context Protocol at /mcp with say and stop (#20)
+
 ## [v0.1.2] - 2026-10-30
 
 ### Highlights
