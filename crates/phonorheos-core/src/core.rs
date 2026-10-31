@@ -5,6 +5,7 @@
 //! clients reading the stream, and the voice's state.
 
 use crate::access::Token;
+use crate::cache::{Cache, Chunks, Key};
 use crate::clock;
 use crate::events::{Draft, Event, EventHub, Kind};
 use crate::queue::{Item, ItemView, Queue, Withdrawn};
@@ -72,6 +73,10 @@ pub struct Request {
     pub speed: Option<f32>,
     /// Whether to speak it clause by clause; where unset, the owner's setting decides.
     pub by_clause: Option<bool>,
+    /// Whether to play it; when false it is only made, to be cached.
+    pub speak: bool,
+    /// Whether to keep its speech once made.
+    pub cache: bool,
 }
 
 /// What the server returns for an accepted request.
@@ -94,6 +99,7 @@ pub struct Core {
     readers: Mutex<BTreeMap<u64, Reader>>,
     next_reader: AtomicU64,
     voice: Mutex<VoiceStatus>,
+    cache: Mutex<Cache>,
     changed: watch::Sender<u64>,
 }
 
@@ -114,6 +120,7 @@ impl Core {
             readers: Mutex::default(),
             next_reader: AtomicU64::new(0),
             voice: Mutex::default(),
+            cache: Mutex::default(),
             changed: watch::channel(0).0,
         }
     }
@@ -140,6 +147,8 @@ impl Core {
             voice: r.voice,
             speed: r.speed,
             by_clause: r.by_clause,
+            speak: r.speak,
+            cache: r.cache,
         };
         let (ahead, event) = {
             let mut q = self.queue.lock().expect("queue lock");
@@ -165,6 +174,7 @@ impl Core {
                 text: with_text.then(|| item.text.clone()),
                 voice: item.voice.clone(),
                 reason,
+                speak: item.speak,
             },
         )
     }
@@ -273,6 +283,30 @@ impl Core {
         self.touch();
     }
 
+    /// The kept speech for `key`, if a client asked for it to be cached.
+    pub fn cached(&self, key: &Key) -> Option<Chunks> {
+        self.cache.lock().expect("cache lock").get(key)
+    }
+
+    /// The cache's generation, taken before speech is made and passed to `keep`.
+    pub fn cache_generation(&self) -> u64 {
+        self.cache.lock().expect("cache lock").generation()
+    }
+
+    /// Keeps the speech made for `key`, unless the cache was emptied since it was begun.
+    pub fn keep(&self, key: Key, chunks: Vec<Vec<u8>>, generation: u64) {
+        let mut c = self.cache.lock().expect("cache lock");
+        if c.generation() == generation {
+            c.put(key, chunks);
+        }
+    }
+
+    /// Empties the cache, as when the pronunciation table changes and the kept speech no
+    /// longer matches it.
+    pub fn clear_cache(&self) {
+        self.cache.lock().expect("cache lock").clear();
+    }
+
     /// Registers a stream reader; it is listed until the returned guard is dropped.
     pub fn reader(
         &self,
@@ -335,6 +369,8 @@ mod tests {
             voice: None,
             speed: None,
             by_clause: None,
+            speak: true,
+            cache: false,
         }
     }
 
@@ -433,6 +469,18 @@ mod tests {
         core.finished(&item, Outcome::Cancelled);
         let after: Vec<Kind> = kinds(&core, 3);
         assert_eq!(after, [Kind::Cancelled, Kind::Cancelled, Kind::Cancelled]);
+    }
+
+    #[test]
+    fn speech_begun_before_the_cache_was_emptied_is_not_kept() {
+        let core = Core::default();
+        let key = Key::new("Thinking...", "bm_lewis", 1.0, false);
+        let before = core.cache_generation();
+        core.clear_cache();
+        core.keep(key.clone(), vec![vec![1]], before);
+        assert!(core.cached(&key).is_none());
+        core.keep(key.clone(), vec![vec![1]], core.cache_generation());
+        assert!(core.cached(&key).is_some());
     }
 
     #[test]

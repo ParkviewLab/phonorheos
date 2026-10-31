@@ -3,7 +3,8 @@
 
 //! The Model Context Protocol at `POST /mcp`, so that an MCP client (a Claude Code
 //! session, say) speaks with a tool call instead of a shell command. Two tools:
-//! `say`, which queues text exactly as `POST /speak` does and returns at once, and
+//! `say`, which queues text exactly as `POST /speak` does (with its `speak` and `cache`
+//! options) and returns at once, and
 //! `stop`. Stateless, with plain JSON replies; the listener's access check (`Host`,
 //! `Origin`, LAN tokens) has already run, so rmcp's own `Host` check is off.
 
@@ -28,6 +29,10 @@ struct SayParams {
     voice: Option<String>,
     /// 0.5 to 2; the app's speed if absent.
     speed: Option<f32>,
+    /// Whether to play it now; true if absent. False with `cache` makes it ready unheard.
+    speak: Option<bool>,
+    /// Whether to keep the speech so that it plays at once the next time; false if absent.
+    cache: Option<bool>,
 }
 
 #[derive(Clone)]
@@ -38,7 +43,9 @@ pub struct Phonorheos {
 
 #[tool_router]
 impl Phonorheos {
-    #[tool(description = "Speak text aloud. Returns once it is queued.")]
+    #[tool(
+        description = "Speak text aloud, or with speak false and cache true prepare it unheard. Returns once it is queued."
+    )]
     fn say(
         &self,
         Parameters(p): Parameters<SayParams>,
@@ -55,6 +62,8 @@ impl Phonorheos {
             p.voice,
             p.speed,
             None,
+            p.speak,
+            p.cache,
         ) {
             Ok(r) => {
                 let accepted = self.core.speak(r);

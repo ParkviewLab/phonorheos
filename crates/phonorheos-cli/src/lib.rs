@@ -11,7 +11,10 @@ use std::path::Path;
 use std::process::ExitCode;
 
 const USAGE: &str = "usage:
-  phonorheos say [--voice <voice>] [--speed <0.5..2>] [--by-clause | --whole] [--no-wait] <text>…
+  phonorheos say [--voice <voice>] [--speed <0.5..2>] [--by-clause | --whole] [--cache] [--silent]
+                 [--no-wait] <text>…
+    --cache   keep the speech, so that the same text plays at once next time
+    --silent  with --cache, make the speech without playing it
   phonorheos stop
   phonorheos status
   phonorheos --version";
@@ -53,6 +56,8 @@ struct Say {
     voice: Option<String>,
     speed: Option<f32>,
     by_clause: Option<bool>,
+    cache: bool,
+    silent: bool,
     wait: bool,
 }
 
@@ -62,6 +67,8 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
         voice: None,
         speed: None,
         by_clause: None,
+        cache: false,
+        silent: false,
         wait: true,
     };
     let mut words = Vec::new();
@@ -75,6 +82,8 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
             }
             "--by-clause" => s.by_clause = Some(true),
             "--whole" => s.by_clause = Some(false),
+            "--cache" => s.cache = true,
+            "--silent" => s.silent = true,
             "--no-wait" => s.wait = false,
             "--" => words.extend(it.by_ref().cloned()),
             _ => words.push(a.clone()),
@@ -83,6 +92,9 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
     s.text = words.join(" ");
     if s.text.trim().is_empty() {
         return Err(format!("nothing to say\n{USAGE}"));
+    }
+    if s.silent && !s.cache {
+        return Err("--silent needs --cache, or it does nothing".into());
     }
     Ok(s)
 }
@@ -98,6 +110,12 @@ fn say(socket: &Path, args: &[String]) -> Result<(), String> {
     }
     if let Some(b) = s.by_clause {
         body["by_clause"] = b.into();
+    }
+    if s.cache {
+        body["cache"] = true.into();
+    }
+    if s.silent {
+        body["speak"] = false.into();
     }
     let (code, reply) = request(socket, "POST", "/speak", Some(&body.to_string()))?;
     let reply: serde_json::Value =
@@ -246,6 +264,14 @@ mod tests {
             Some(false)
         );
         assert_eq!(parse_say(&args(&["x"])).unwrap().by_clause, None);
+        let s = parse_say(&args(&["--cache", "--silent", "Thinking..."])).unwrap();
+        assert_eq!(
+            (s.cache, s.silent, s.text.as_str()),
+            (true, true, "Thinking...")
+        );
+        let s = parse_say(&args(&["x"])).unwrap();
+        assert!(!s.cache && !s.silent);
+        assert!(parse_say(&args(&["--silent", "x"])).is_err());
     }
 
     #[test]

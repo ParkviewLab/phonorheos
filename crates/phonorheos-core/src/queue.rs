@@ -16,6 +16,10 @@ pub struct Item {
     pub voice: Option<String>,
     pub speed: Option<f32>,
     pub by_clause: Option<bool>,
+    /// Whether to play it; when false it is only made, to be cached.
+    pub speak: bool,
+    /// Whether to keep its speech once made.
+    pub cache: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -33,7 +37,14 @@ pub struct ItemView {
     pub text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub voice: Option<String>,
+    /// Present, and false, for an item that is only made to be cached.
+    #[serde(skip_serializing_if = "is_true")]
+    pub speak: bool,
     pub state: State,
+}
+
+fn is_true(b: &bool) -> bool {
+    *b
 }
 
 impl ItemView {
@@ -43,6 +54,7 @@ impl ItemView {
             client: item.client.clone(),
             text: item.text.clone(),
             voice: item.voice.clone(),
+            speak: item.speak,
             state,
         }
     }
@@ -140,6 +152,8 @@ mod tests {
             voice: None,
             speed: None,
             by_clause: None,
+            speak: true,
+            cache: false,
         }
     }
 

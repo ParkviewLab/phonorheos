@@ -427,6 +427,18 @@ footer.site {
     <div class="prose">
       <p>The setting is off by default. An app can choose for each piece it sends, whatever the window says (<code>"by_clause": true</code> or <code>false</code>), and so can the command (<code>--by-clause</code> or <code>--whole</code>).</p>
     </div>
+
+    <h3 id="kept">Phrases that play at once</h3>
+    <div class="prose">
+      <p>Some apps say the same short phrase again and again. Peabody, which answers spoken questions with a language model, says "One moment please..." or a phrase like it as soon as it hears a question, so that the wait for the model is not silent. Made afresh each time, even a short phrase takes a moment, and on a slow machine that moment is the delay the phrase is meant to cover. So an app can ask phonorheos to keep the speech for a text, and the next time that text arrives in the same voice, at the same speed and cut the same way, phonorheos plays the kept speech at once instead of making it again.</p>
+      <p>Nothing is kept unless an app asks. Each piece an app sends can carry two choices:</p>
+      <ul>
+        <li><strong><code>cache</code>:</strong> keep the speech once it is made. Off unless asked for.</li>
+        <li><strong><code>speak</code>:</strong> play it now. On unless turned off.</li>
+      </ul>
+      <p>An app prepares its phrases with <code>cache</code> on and <code>speak</code> off: phonorheos makes them in the queue's turn without a sound. When it wants one, it sends the same text with both on; if the speech is kept, it plays at once, and if it is not (phonorheos has restarted since), it is made, played and kept again. A piece with both off does nothing and is refused.</p>
+      <p>The kept speech lives in memory, so it is gone when phonorheos quits. It is limited to 32 MB, about five and a half minutes of speech; when it is full, the phrase used least recently is dropped. Changing the list of <span class="ui">Words it says wrongly</span> empties it, since kept speech would still say the words the old way.</p>
+    </div>
   </section>
 
   <!-- ===================================================== WORDS -->
@@ -474,6 +486,8 @@ footer.site {
           <tr><td><code>phonorheos say --no-wait "…"</code></td><td>Queues the text and returns at once.</td></tr>
           <tr><td><code>phonorheos say --voice bf_emma --speed 1.2 "…"</code></td><td>Speaks in another voice or at another speed.</td></tr>
           <tr><td><code>phonorheos say --by-clause "…"</code> or <code>--whole</code></td><td>Chooses how the text is cut, whatever the window's setting.</td></tr>
+          <tr><td><code>phonorheos say --cache "…"</code></td><td>Speaks the text and keeps its speech, so that it plays at once next time (see <a href="#kept">Phrases that play at once</a>).</td></tr>
+          <tr><td><code>phonorheos say --cache --silent "…"</code></td><td>Makes and keeps the speech without playing it.</td></tr>
           <tr><td><code>phonorheos stop</code></td><td>Silences everything.</td></tr>
           <tr><td><code>phonorheos status</code></td><td>Prints the version, the voice's state, what is being spoken and how many items wait.</td></tr>
         </tbody>
@@ -489,7 +503,7 @@ footer.site {
     <h2>From Claude Code and other MCP clients</h2>
     <p class="prose">phonorheos is also a Model Context Protocol server, at <code>http://127.0.0.1:35861/mcp</code>, so that an AI assistant can speak with a tool rather than a command. Register it once in Claude Code:</p>
 <pre><code>claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp</code></pre>
-    <p class="prose">A session started afterwards has two tools: <code>say</code>, which speaks text (optionally in another voice or at another speed) and returns as soon as it is queued, and <code>stop</code>, which silences everything. phonorheos must be running when the session starts. From another machine, use <code>http://&lt;this-machine&gt;.local:35861/mcp</code> with the network switched on and a token, given to the client as an <code>Authorization: Bearer &lt;token&gt;</code> header (in Claude Code, <code>--header "Authorization: Bearer &lt;token&gt;"</code>).</p>
+    <p class="prose">A session started afterwards has two tools: <code>say</code>, which speaks text (optionally in another voice or at another speed, and with the <code>speak</code> and <code>cache</code> choices described under <a href="#kept">Phrases that play at once</a>) and returns as soon as it is queued, and <code>stop</code>, which silences everything. phonorheos must be running when the session starts. From another machine, use <code>http://&lt;this-machine&gt;.local:35861/mcp</code> with the network switched on and a token, given to the client as an <code>Authorization: Bearer &lt;token&gt;</code> header (in Claude Code, <code>--header "Authorization: Bearer &lt;token&gt;"</code>).</p>
   </section>
 
   <!-- ===================================================== LOGIN -->

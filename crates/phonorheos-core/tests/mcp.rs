@@ -234,3 +234,22 @@ async fn a_call_reaches_the_queue_within_5_ms() {
     assert!(median < Duration::from_millis(5), "median {median:?}");
     assert_eq!(c.queue().len(), 22);
 }
+
+#[tokio::test]
+async fn say_carries_the_speak_and_cache_options() {
+    let c = core();
+    let app = router(c.clone(), Source::Loopback(35861));
+    let (_, body) = send(
+        &app,
+        call(
+            "say",
+            json!({"text": "One moment please...", "speak": false, "cache": true}),
+        ),
+    )
+    .await;
+    assert!(!result(&body).1);
+    let item = c.next().await;
+    assert!(!item.speak && item.cache);
+    let (_, body) = send(&app, call("say", json!({"text": "x", "speak": false}))).await;
+    assert!(result(&body).1, "neither speaking nor caching is refused");
+}
