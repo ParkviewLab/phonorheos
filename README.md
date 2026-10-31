@@ -65,6 +65,7 @@ phonorheos serves HTTP/1.1 on:
 | `DELETE /speak/<id>` | Withdraws the item, or stops it if it is being spoken: 204, or 404 if there is no such item. |
 | `POST /stop` | Silences everything: `{"stopped": n}`. |
 | `GET /events?item=<id>&client=<name>&last_id=<n>` | The events, as Server-Sent Events, optionally only one item's or one client's. A reconnecting client sends `Last-Event-ID` (or `?last_id=`) and is sent what it missed, while it is among the last 1000 events. A comment line every 15 s keeps the connection alive. |
+| `POST /mcp` | The Model Context Protocol (stateless, JSON replies), with two tools: `say` (`text`, and optionally `voice` and `speed`), which queues the text as `POST /speak` does and returns `{"id", "ahead"}` at once, and `stop`. Behind the same rules as every other endpoint, tokens included on the LAN. |
 | `GET /queue`, `GET /status`, `GET /health` | The queue; the voice's state, what is speaking, the readers and the version; whether it is up. |
 
 Each item's events are `queued` (with its `text`), `started` (its first sound has been sent to the speakers), and one of `finished` (spoken to the end), `cancelled` (with a `reason`: withdrawn, stopped, or stopped while speaking) or `failed` (with a `reason`). Every event has its `id`, the `item`, the `client` and the time (`at`), and the `voice` where the item named one. An event:
@@ -87,6 +88,12 @@ phonorheos say "Good evening. The build has finished."
 
 ```bash
 sudo mkdir -p /usr/local/bin && sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos
+```
+
+From Claude Code, or any MCP client, register the endpoint once; the tools are then `mcp__phonorheos__say` and `mcp__phonorheos__stop`:
+
+```bash
+claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp
 ```
 
 With `curl` (on Linux, the socket is `$XDG_RUNTIME_DIR/phonorheos/phonorheos.sock`):
