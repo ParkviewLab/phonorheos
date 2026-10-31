@@ -362,3 +362,25 @@ async fn a_request_that_neither_speaks_nor_caches_is_refused() {
     assert!(body["error"].as_str().unwrap().contains("both false"));
     assert!(c.queue().is_empty());
 }
+
+#[tokio::test]
+async fn a_silent_items_events_say_so() {
+    let c = core();
+    send(
+        &c,
+        post(
+            "/speak",
+            json!({"text": "x", "speak": false, "cache": true}),
+        ),
+    )
+    .await;
+    send(&c, post("/speak", json!({"text": "y"}))).await;
+    let (events, _) = c.events().subscribe(Some(0));
+    assert!(!events[0].speak);
+    assert!(events[1].speak);
+    let v = serde_json::to_value(&events[1]).unwrap();
+    assert!(
+        v.get("speak").is_none(),
+        "a spoken item's events carry no speak field"
+    );
+}

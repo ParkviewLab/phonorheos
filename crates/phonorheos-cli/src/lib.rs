@@ -93,6 +93,9 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
     if s.text.trim().is_empty() {
         return Err(format!("nothing to say\n{USAGE}"));
     }
+    if s.silent && !s.cache {
+        return Err("--silent needs --cache, or it does nothing".into());
+    }
     Ok(s)
 }
 
@@ -268,6 +271,7 @@ mod tests {
         );
         let s = parse_say(&args(&["x"])).unwrap();
         assert!(!s.cache && !s.silent);
+        assert!(parse_say(&args(&["--silent", "x"])).is_err());
     }
 
     #[test]

@@ -174,6 +174,7 @@ impl Core {
                 text: with_text.then(|| item.text.clone()),
                 voice: item.voice.clone(),
                 reason,
+                speak: item.speak,
             },
         )
     }

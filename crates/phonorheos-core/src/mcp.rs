@@ -43,7 +43,9 @@ pub struct Phonorheos {
 
 #[tool_router]
 impl Phonorheos {
-    #[tool(description = "Speak text aloud. Returns once it is queued.")]
+    #[tool(
+        description = "Speak text aloud, or with speak false and cache true prepare it unheard. Returns once it is queued."
+    )]
     fn say(
         &self,
         Parameters(p): Parameters<SayParams>,
