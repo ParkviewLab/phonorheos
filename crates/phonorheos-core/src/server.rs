@@ -9,6 +9,7 @@
 //! - `POST /stop` → `{"stopped": n}`
 //! - `GET /events?item=&client=&last_id=` (or `Last-Event-ID`) → Server-Sent Events
 //! - `GET /queue`, `GET /status`, `GET /health`
+//! - `POST /mcp`: the Model Context Protocol, with the tools `say` and `stop` (see `mcp`)
 
 use crate::access::{self, Decision, Headers, Source};
 use crate::core::{Core, Request};
@@ -18,7 +19,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::middleware::{self, Next};
 use axum::response::sse::{Event as SseEvent, KeepAlive, Sse};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{delete, get, post};
+use axum::routing::{delete, get, post, post_service};
 use axum::{Extension, Json, Router};
 use futures_util::stream::{self, Stream, StreamExt};
 use serde::Deserialize;
@@ -60,7 +61,7 @@ struct LocalPort(u16);
 
 /// The name a LAN token gave the request, set by the access check.
 #[derive(Clone)]
-struct TokenName(Option<String>);
+pub(crate) struct TokenName(pub(crate) Option<String>);
 
 pub fn router(core: Arc<Core>, source: Source) -> Router {
     let ctx = Ctx { core, source };
@@ -72,6 +73,7 @@ pub fn router(core: Arc<Core>, source: Source) -> Router {
         .route("/queue", get(queue))
         .route("/status", get(status))
         .route("/health", get(|| async { "ok" }))
+        .route("/mcp", post_service(crate::mcp::service(ctx.core.clone())))
         .layer(middleware::from_fn_with_state(ctx.clone(), check))
         // 20 000 characters, each up to four bytes or a six-character JSON escape.
         .layer(DefaultBodyLimit::max(256 * 1024))
@@ -119,7 +121,7 @@ struct SpeakBody {
     by_clause: Option<bool>,
 }
 
-fn client_name(token: &TokenName, given: Option<String>, headers: &HeaderMap) -> String {
+pub(crate) fn client_name(token: &TokenName, given: Option<String>, headers: &HeaderMap) -> String {
     if let Some(name) = &token.0 {
         return name.clone();
     }
@@ -139,38 +141,58 @@ async fn speak(
     let Ok(Json(body)) = body else {
         return error(StatusCode::BAD_REQUEST, "expected JSON with a text");
     };
-    let text = body.text.trim();
+    match request(
+        &body.text,
+        client_name(&token, body.client, &headers),
+        body.voice,
+        body.speed,
+        body.by_clause,
+    ) {
+        Ok(r) => (StatusCode::CREATED, Json(ctx.core.speak(r))).into_response(),
+        Err((code, why)) => error(code, why),
+    }
+}
+
+/// Checks what a client asked to have spoken, for `POST /speak` and the MCP `say`
+/// tool alike, and makes it a request for the queue, or gives the reason it is refused.
+pub(crate) fn request(
+    text: &str,
+    client: String,
+    voice: Option<String>,
+    speed: Option<f32>,
+    by_clause: Option<bool>,
+) -> Result<Request, (StatusCode, &'static str)> {
+    let text = text.trim();
     if text.is_empty() {
-        return error(StatusCode::BAD_REQUEST, "the text is empty");
+        return Err((StatusCode::BAD_REQUEST, "the text is empty"));
     }
     if text.chars().count() > MAX_TEXT {
-        return error(
+        return Err((
             StatusCode::PAYLOAD_TOO_LARGE,
             "the text is longer than 20000 characters",
-        );
+        ));
     }
-    if let Some(s) = body.speed
+    if let Some(s) = speed
         && !(0.5..=2.0).contains(&s)
     {
-        return error(StatusCode::BAD_REQUEST, "speed must be between 0.5 and 2");
+        return Err((StatusCode::BAD_REQUEST, "speed must be between 0.5 and 2"));
     }
-    let voice = body.voice.filter(|v| !v.trim().is_empty());
+    let voice = voice.filter(|v| !v.trim().is_empty());
     if let Some(v) = &voice
         && !v.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
     {
-        return error(
+        return Err((
             StatusCode::BAD_REQUEST,
             "a voice name is letters, digits and _",
-        );
+        ));
     }
-    let accepted = ctx.core.speak(Request {
+    Ok(Request {
         text: text.to_string(),
-        client: client_name(&token, body.client, &headers),
+        client,
         voice,
-        speed: body.speed,
-        by_clause: body.by_clause,
-    });
-    (StatusCode::CREATED, Json(accepted)).into_response()
+        speed,
+        by_clause,
+    })
 }
 
 async fn withdraw(State(ctx): State<Ctx>, Path(id): Path<String>) -> Response {
