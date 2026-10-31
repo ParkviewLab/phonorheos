@@ -129,6 +129,36 @@ async fn say_refuses_what_post_speak_refuses_with_the_same_reason() {
     assert!(c.queue().is_empty());
 }
 
+/// A client of protocol revision 2026-07-28 carries the version, its identity and its
+/// capabilities in each request's `_meta`, and the method and tool in headers.
+#[tokio::test]
+async fn a_2026_07_28_client_is_served() {
+    let c = core();
+    let app = router(c.clone(), Source::Loopback(35861));
+    let meta = json!({
+        "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+        "io.modelcontextprotocol/clientInfo": {"name": "test", "version": "1.0"},
+        "io.modelcontextprotocol/clientCapabilities": {}
+    });
+    let req = Request::post("/mcp")
+        .header("host", HOST)
+        .header("content-type", "application/json")
+        .header("accept", "application/json, text/event-stream")
+        .header("mcp-protocol-version", "2026-07-28")
+        .header("mcp-method", "tools/call")
+        .header("mcp-name", "say")
+        .body(Body::from(
+            json!({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                   "params": {"name": "say", "arguments": {"text": "modern"}, "_meta": meta}})
+            .to_string(),
+        ))
+        .unwrap();
+    let (code, body) = send(&app, req).await;
+    assert_eq!(code, StatusCode::OK, "{body}");
+    assert!(!result(&body).1, "{body}");
+    assert_eq!(c.queue()[0].text, "modern");
+}
+
 #[tokio::test]
 async fn stop_empties_the_queue() {
     let c = core();

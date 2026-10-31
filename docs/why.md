@@ -70,7 +70,7 @@ All rulings are the owner's.
 | D12 | No change to graptostream to ignore phonorheos's speech: spoken names direct its text, so speech heard by a microphone reaches no app unless it begins with a name | 2026-10-29 | |
 | D13 | A handbook document on the Tauri stack and the bundled Python, after the release | 2026-10-29 | |
 | W1 | Weak copyleft (MPL-2.0, LGPL) accepted for components carried unmodified; GPL and AGPL still refused by the build | 2026-10-29 | `LICENSING.md` lists them |
-| M1 | An MCP endpoint at `POST /mcp`, served by the app itself with `rmcp` (the official Rust SDK, Apache-2.0), stateless with JSON replies, so that a session speaks by a tool call of a few tokens instead of a shell command; no stdio bridge, as slower | 2026-10-30 | A call reaches the queue in a median 0.33 ms (debug build, pacific) |
+| M1 | An MCP endpoint at `POST /mcp`, served by the app itself with `rmcp` (the official Rust SDK, Apache-2.0), stateless with JSON replies, so that a session speaks by a tool call of a few tokens instead of a shell command; no stdio bridge, as slower | 2026-10-30 | A call reaches the queue in a median 0.23 ms (debug build, pacific) |
 | M2 | On every listener: the socket, `127.0.0.1` and, when switched on, the LAN behind its tokens | 2026-10-30 | |
 | M3 | Two tools only, `say` (returning once queued) and `stop`, since each tool's description is read into every connected session's context | 2026-10-30 | |
 | M4 | Sessions on the owner's machines connected at user scope, with both tools allowed without a prompt | 2026-10-30 | |

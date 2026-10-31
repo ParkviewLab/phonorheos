@@ -8,7 +8,7 @@
 //! `Origin`, LAN tokens) has already run, so rmcp's own `Host` check is off.
 
 use crate::core::Core;
-use crate::server::{TokenName, client_name, request};
+use crate::server::{MAX_BODY, TokenName, client_name, request};
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::tool::Extension;
 use rmcp::handler::server::wrapper::Parameters;
@@ -84,11 +84,13 @@ impl ServerHandler for Phonorheos {
 
 /// The MCP endpoint as a Tower service, mounted at `/mcp` by `server::router`.
 pub fn service(core: Arc<Core>) -> StreamableHttpService<Phonorheos, NeverSessionManager> {
+    // Built once: the tools' schemas are not regenerated for every call.
+    let tools = Phonorheos::tool_router();
     StreamableHttpService::new(
         move || {
             Ok(Phonorheos {
                 core: core.clone(),
-                tool_router: Phonorheos::tool_router(),
+                tool_router: tools.clone(),
             })
         },
         Arc::new(NeverSessionManager::default()),
@@ -97,6 +99,6 @@ pub fn service(core: Arc<Core>) -> StreamableHttpService<Phonorheos, NeverSessio
             .with_json_response(true)
             .with_sse_keep_alive(None)
             .disable_allowed_hosts()
-            .with_max_request_body_bytes(256 * 1024),
+            .with_max_request_body_bytes(MAX_BODY),
     )
 }

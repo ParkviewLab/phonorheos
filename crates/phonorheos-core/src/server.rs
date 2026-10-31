@@ -33,6 +33,10 @@ use tokio::sync::broadcast::error::RecvError;
 /// The longest text one request may carry.
 pub const MAX_TEXT: usize = 20_000;
 
+/// The largest request body, on `/speak` and `/mcp` alike: 20 000 characters, each up
+/// to four bytes or a six-character JSON escape.
+pub const MAX_BODY: usize = 256 * 1024;
+
 #[derive(Clone)]
 struct Ctx {
     core: Arc<Core>,
@@ -75,8 +79,7 @@ pub fn router(core: Arc<Core>, source: Source) -> Router {
         .route("/health", get(|| async { "ok" }))
         .route("/mcp", post_service(crate::mcp::service(ctx.core.clone())))
         .layer(middleware::from_fn_with_state(ctx.clone(), check))
-        // 20 000 characters, each up to four bytes or a six-character JSON escape.
-        .layer(DefaultBodyLimit::max(256 * 1024))
+        .layer(DefaultBodyLimit::max(MAX_BODY))
         .with_state(ctx)
 }
 
