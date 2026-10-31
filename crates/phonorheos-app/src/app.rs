@@ -262,6 +262,8 @@ fn set_words(state: S<'_>, words: BTreeMap<String, String>) -> Result<(), String
     s.words = words;
     state.save(&s)?;
     state.helper.words(&s.words);
+    // Speech kept with the old table would be said the old way.
+    state.core.clear_cache();
     Ok(())
 }
 
@@ -333,6 +335,8 @@ fn try_say(state: S<'_>, text: String, voice: Option<String>) -> Result<String, 
         voice: voice.filter(|v| VOICES.contains(&v.as_str())),
         speed: None,
         by_clause: None,
+        speak: true,
+        cache: false,
     });
     Ok(accepted.id)
 }

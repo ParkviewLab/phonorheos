@@ -324,3 +324,41 @@ async fn a_second_server_leaves_a_live_socket_alone() {
     assert_eq!(first.queue()[0].text, "still here");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[tokio::test]
+async fn a_request_may_ask_for_its_speech_to_be_cached_unheard() {
+    let c = core();
+    let (code, _) = send(
+        &c,
+        post(
+            "/speak",
+            json!({"text": "Thinking...", "speak": false, "cache": true}),
+        ),
+    )
+    .await;
+    assert_eq!(code, StatusCode::CREATED);
+    send(&c, post("/speak", json!({"text": "Hello."}))).await;
+    let (_, q) = send(&c, get("/queue")).await;
+    assert_eq!(q["items"][0]["speak"], false);
+    assert!(
+        q["items"][1].get("speak").is_none(),
+        "spoken items carry no speak field"
+    );
+    let first = c.next().await;
+    assert!(!first.speak && first.cache);
+    c.finished(&first, Outcome::Finished);
+    let second = c.next().await;
+    assert!(
+        second.speak && !second.cache,
+        "speak defaults to true, cache to false"
+    );
+}
+
+#[tokio::test]
+async fn a_request_that_neither_speaks_nor_caches_is_refused() {
+    let c = core();
+    let (code, body) = send(&c, post("/speak", json!({"text": "x", "speak": false}))).await;
+    assert_eq!(code, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("both false"));
+    assert!(c.queue().is_empty());
+}

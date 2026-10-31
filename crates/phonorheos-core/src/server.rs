@@ -4,7 +4,9 @@
 //! The HTTP interface, the same on the Unix socket, 127.0.0.1 and the LAN; each
 //! listener applies its own access rule (see `access`).
 //!
-//! - `POST /speak` `{"text", "client"?, "voice"?, "speed"?, "by_clause"?}` → 201 `{"id", "event", "ahead"}`
+//! - `POST /speak` `{"text", "client"?, "voice"?, "speed"?, "by_clause"?, "speak"?, "cache"?}` → 201
+//!   `{"id", "event", "ahead"}`; `cache` keeps the speech so that it plays at once next
+//!   time, and `speak: false` with it makes the speech without playing it
 //! - `DELETE /speak/{id}` → 204, or 404
 //! - `POST /stop` → `{"stopped": n}`
 //! - `GET /events?item=&client=&last_id=` (or `Last-Event-ID`) → Server-Sent Events
@@ -122,6 +124,8 @@ struct SpeakBody {
     voice: Option<String>,
     speed: Option<f32>,
     by_clause: Option<bool>,
+    speak: Option<bool>,
+    cache: Option<bool>,
 }
 
 pub(crate) fn client_name(token: &TokenName, given: Option<String>, headers: &HeaderMap) -> String {
@@ -150,6 +154,8 @@ async fn speak(
         body.voice,
         body.speed,
         body.by_clause,
+        body.speak,
+        body.cache,
     ) {
         Ok(r) => (StatusCode::CREATED, Json(ctx.core.speak(r))).into_response(),
         Err((code, why)) => error(code, why),
@@ -164,7 +170,16 @@ pub(crate) fn request(
     voice: Option<String>,
     speed: Option<f32>,
     by_clause: Option<bool>,
+    speak: Option<bool>,
+    cache: Option<bool>,
 ) -> Result<Request, (StatusCode, &'static str)> {
+    let (speak, cache) = (speak.unwrap_or(true), cache.unwrap_or(false));
+    if !speak && !cache {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "speak and cache are both false, which does nothing",
+        ));
+    }
     let text = text.trim();
     if text.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "the text is empty"));
@@ -195,6 +210,8 @@ pub(crate) fn request(
         voice,
         speed,
         by_clause,
+        speak,
+        cache,
     })
 }
 
