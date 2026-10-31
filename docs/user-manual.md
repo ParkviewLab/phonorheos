@@ -72,6 +72,8 @@ Names and unusual words may come out wrongly. **Settings → Words** lists words
 
 The list starts with phonorheos's own name. A word that is neither in the list nor in the voice's dictionaries is pronounced from a model that predicts sounds from spelling, which is usually close and sometimes not.
 
+Clock times are said as words before anything else: "10:43 AM" as "ten forty-three AM", "5:07 p.m." as "five oh seven PM", "17:39" as "seventeen thirty-nine"; the voice's own dictionaries cannot read a time with a colon.
+
 ## Other machines on your network
 
 phonorheos normally hears only programs on its own machine. To let other machines send it text:
