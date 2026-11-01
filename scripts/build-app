@@ -25,7 +25,7 @@ esac
 RESOURCES='"python/":"python/","THIRD-PARTY-NOTICES.txt":"THIRD-PARTY-NOTICES.txt"'
 if [ "$OS" = windows-x64 ]; then
   # Git Bash has no python3; uv's Python reads the bundled one's package metadata.
-  uv run --no-project --python 3.12 -- python -I scripts/third-party-notices "$TARGET" "$APP/python" "$APP/THIRD-PARTY-NOTICES.txt"
+  uv run --no-project --python 3.12 -- python -I -X utf8 scripts/third-party-notices "$TARGET" "$APP/python" "$APP/THIRD-PARTY-NOTICES.txt"
   # The app's phonorheos.exe is a windowed program, which a terminal does not wait for
   # and whose output it does not show, so the command goes in as its own console
   # program.
