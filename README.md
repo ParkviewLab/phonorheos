@@ -145,7 +145,7 @@ PHONORHEOS_PYTHON=/tmp/phonorheos-python/bin/python3 cargo run -p phonorheos-app
 
 ## Releasing
 
-Releases follow the ParkviewLab handbook's [`releases.md`](https://github.com/ParkviewLab/handbook/blob/main/docs/releases.md). A `v*` tag on `main` runs `.github/workflows/release.yml`: the gate checks the tag against `VERSION.txt`; the macOS job builds the app with `scripts/build-app`, its bundled Python signed file by file with the organisation's Developer ID, and `scripts/notarize` notarises and staples the disk image; the Linux job builds the `.deb` and the AppImage on Ubuntu 24.04; the Windows job builds the MSI and checks it with `scripts/smoke-windows`; the last job writes the changelog and creates the GitHub Release with the four installers.
+Releases follow the ParkviewLab handbook's [`releases.md`](https://github.com/ParkviewLab/handbook/blob/main/docs/releases.md). A `v*` tag on `main` runs `.github/workflows/release.yml`: the gate checks the tag against `VERSION.txt`; the macOS job builds the app with `scripts/build-app`, its bundled Python signed file by file with the organisation's Developer ID, and `scripts/notarize` notarises and staples the disk image; the Linux job builds the `.deb` and the AppImage on Ubuntu 24.04; the Windows job builds the `setup.exe` and checks it with `scripts/smoke-windows`; the last job writes the changelog and creates the GitHub Release with the four installers.
 
 ## Licence
 
