@@ -11,4 +11,5 @@ notarization.json
 .ruff_cache/
 crates/phonorheos-app/gen/
 crates/phonorheos-app/python/
+crates/phonorheos-app/bin/
 crates/phonorheos-app/THIRD-PARTY-NOTICES.txt

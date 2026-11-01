@@ -4,7 +4,9 @@
 #
 # Builds the installers into dist/: on macOS the app in a disk image
 # (phonorheos-<version>-macos-arm64.dmg), on Linux a .deb and an AppImage
-# (phonorheos-<version>-linux-amd64.*). The bundled Python is prepared first
+# (phonorheos-<version>-linux-amd64.*), on Windows (Git Bash) an MSI
+# (phonorheos-<version>-windows-x64.msi), unsigned, with the command as a console
+# program in bin\, which the MSI puts on the PATH. The bundled Python is prepared first
 # (scripts/prepare-python) and the third-party notices generated. Signing on macOS:
 # SIGN_IDENTITY (CI sets the Developer ID identity), else the bundle is signed ad hoc.
 set -e
@@ -17,13 +19,27 @@ scripts/prepare-python
 case "$(uname)" in
   Darwin) TARGET=aarch64-apple-darwin; OS=macos-arm64; BUNDLES=app,dmg ;;
   Linux) TARGET=x86_64-unknown-linux-gnu; OS=linux-amd64; BUNDLES=deb,appimage ;;
+  MINGW* | MSYS*) TARGET=x86_64-pc-windows-msvc; OS=windows-x64; BUNDLES=msi ;;
   *) echo "unsupported system: $(uname)" >&2; exit 1 ;;
 esac
-scripts/third-party-notices "$TARGET" "$APP/python" "$APP/THIRD-PARTY-NOTICES.txt"
-CONFIG=$(printf '{"version":"%s","bundle":{"resources":{"python/":"python/","THIRD-PARTY-NOTICES.txt":"THIRD-PARTY-NOTICES.txt"}}}' "$SEMVER")
+RESOURCES='"python/":"python/","THIRD-PARTY-NOTICES.txt":"THIRD-PARTY-NOTICES.txt"'
+if [ "$OS" = windows-x64 ]; then
+  # Git Bash has no python3; uv's Python reads the bundled one's package metadata.
+  uv run --no-project --python 3.12 -- python -I scripts/third-party-notices "$TARGET" "$APP/python" "$APP/THIRD-PARTY-NOTICES.txt"
+  # The app's phonorheos.exe is a windowed program, which a terminal does not wait for
+  # and whose output it does not show, so the command goes in as its own console
+  # program.
+  cargo build --release --locked -p phonorheos-cli
+  rm -rf "$APP/bin" && mkdir -p "$APP/bin"
+  cp target/release/phonorheos-cli.exe "$APP/bin/phonorheos.exe"
+  RESOURCES="$RESOURCES,\"bin/\":\"bin/\""
+else
+  scripts/third-party-notices "$TARGET" "$APP/python" "$APP/THIRD-PARTY-NOTICES.txt"
+fi
+CONFIG=$(printf '{"version":"%s","bundle":{"resources":{%s}}}' "$SEMVER" "$RESOURCES")
 if [ "$(uname)" = Darwin ]; then
   export APPLE_SIGNING_IDENTITY="${SIGN_IDENTITY:--}"
-else
+elif [ "$(uname)" = Linux ]; then
   # linuxdeploy does not follow the bundled libraries' $ORIGIN, and its strip
   # fails on newer libraries' relocations.
   LD_LIBRARY_PATH=$(find "$PWD/$APP/python" -name '*.so*' -type f -printf '%h\n' | sort -u | paste -sd:)
@@ -37,5 +53,6 @@ case "$OS" in
   linux-amd64)
     cp "$B"/deb/*.deb "dist/phonorheos-$VERSION-$OS.deb"
     cp "$B"/appimage/*.AppImage "dist/phonorheos-$VERSION-$OS.AppImage" ;;
+  windows-x64) cp "$B"/msi/*.msi "dist/phonorheos-$VERSION-$OS.msi" ;;
 esac
 ls -l dist

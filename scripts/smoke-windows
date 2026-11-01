@@ -1,0 +1,32 @@
+#!/bin/bash
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Checks the Windows installer on a CI runner (Git Bash): the MSI in dist/ installs
+# silently, the command's folder is on the system PATH, the app starts, answers
+# /status, loads its voice, lists `say` at /mcp, and the command reaches it. The
+# runner has no speakers, so what is heard is not checked.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+MSI=$(ls dist/*.msi)
+msiexec //i "$(cygpath -w "$MSI")" //qn //l*v install.log || { tail -n 40 install.log; exit 1; }
+DIR="/c/Program Files/phonorheos"
+ls "$DIR/phonorheos.exe" "$DIR/bin/phonorheos.exe" "$DIR/python/python.exe"
+reg query 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' //v Path \
+  | grep -qi 'phonorheos\\bin' || { echo "the command's folder is not on the system PATH" >&2; exit 1; }
+"$DIR/phonorheos.exe" &
+URL=http://127.0.0.1:35861
+state=""
+for _ in $(seq 1 180); do
+  state=$(curl -fs "$URL/status" | python -c 'import json,sys; print(json.load(sys.stdin)["voice"]["state"])' 2>/dev/null || true)
+  [ "$state" = ready ] && break
+  sleep 2
+done
+curl -fs "$URL/status"; echo
+[ "$state" = ready ] || { echo "the voice did not become ready (last state: ${state:-no answer})" >&2; exit 1; }
+curl -fs "$URL/mcp" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -q '"name":"say"' \
+  || { echo "/mcp does not list say" >&2; exit 1; }
+"$DIR/bin/phonorheos.exe" status
+timeout 120 "$DIR/bin/phonorheos.exe" say "Hello from Windows."
+echo "the Windows installer works"

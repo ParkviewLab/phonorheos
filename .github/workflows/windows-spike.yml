@@ -4,7 +4,7 @@
 name: Windows spike
 
 # Temporary, removed before the pull request: does the bundled Python install on
-# Windows and make speech with no espeak-ng?
+# Windows and make speech with no espeak-ng? Does the MSI build, install and run?
 
 on:
   push:
@@ -39,3 +39,25 @@ jobs:
           print(errs)
           sys.exit(0 if 'audio' in kinds and not errs else 1)
           "
+
+  installer:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - name: Tauri
+        run: cargo install tauri-cli --version "^2" --locked
+      - name: Build the MSI
+        run: scripts/build-app
+      - name: Install and check it
+        run: scripts/smoke-windows
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: installers-windows
+          path: |
+            dist/*.msi
+            install.log
