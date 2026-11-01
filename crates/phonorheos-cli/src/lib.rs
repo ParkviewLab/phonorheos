@@ -1,14 +1,66 @@
 // SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! The `phonorheos` command: `phonorheos say "…"` sends text to the running app over
-//! its Unix socket and waits until it has been spoken. A plain HTTP/1.1 client over
-//! the socket, since the command needs nothing more.
+//! The `phonorheos` command: `phonorheos say "…"` sends text to the running app and
+//! waits until it has been spoken. A plain HTTP/1.1 client, since the command needs
+//! nothing more, over the app's Unix socket on macOS and Linux and over 127.0.0.1 on
+//! Windows, whose Rust standard library has no Unix socket.
 
 use std::io::{BufRead, BufReader, Read, Write};
-use std::os::unix::net::UnixStream;
-use std::path::Path;
+use std::net::{SocketAddr, TcpStream};
 use std::process::ExitCode;
+
+/// Where the command reaches the running app.
+#[derive(Debug, Clone)]
+pub enum Endpoint {
+    /// The app's Unix socket (macOS and Linux).
+    #[cfg(unix)]
+    Socket(std::path::PathBuf),
+    /// The app's loopback listener (Windows).
+    Loopback(SocketAddr),
+}
+
+trait Stream: Read + Write {}
+impl<T: Read + Write> Stream for T {}
+
+impl Endpoint {
+    /// The socket on macOS and Linux, `127.0.0.1` at phonorheos's port on Windows.
+    pub fn default_for_this_system() -> Self {
+        #[cfg(unix)]
+        {
+            Self::Socket(phonorheos_core::paths::socket_path())
+        }
+        #[cfg(not(unix))]
+        {
+            Self::Loopback(SocketAddr::from((
+                std::net::Ipv4Addr::LOCALHOST,
+                phonorheos_core::PORT,
+            )))
+        }
+    }
+
+    /// The `Host` the app's access rule wants: anything on the socket, the loopback
+    /// address and port on TCP.
+    fn host(&self) -> String {
+        match self {
+            #[cfg(unix)]
+            Self::Socket(_) => "localhost".into(),
+            Self::Loopback(addr) => addr.to_string(),
+        }
+    }
+
+    fn connect(&self) -> Result<Box<dyn Stream>, String> {
+        match self {
+            #[cfg(unix)]
+            Self::Socket(path) => std::os::unix::net::UnixStream::connect(path)
+                .map(|s| Box::new(s) as Box<dyn Stream>)
+                .map_err(|e| format!("phonorheos is not running ({}: {e})", path.display())),
+            Self::Loopback(addr) => TcpStream::connect(addr)
+                .map(|s| Box::new(s) as Box<dyn Stream>)
+                .map_err(|e| format!("phonorheos is not running ({addr}: {e})")),
+        }
+    }
+}
 
 const USAGE: &str = "usage:
   phonorheos say [--voice <voice>] [--speed <0.5..2>] [--by-clause | --whole] [--cache] [--silent]
@@ -21,7 +73,7 @@ const USAGE: &str = "usage:
 
 /// Runs the command with its arguments (without the program name).
 pub fn run(args: &[String]) -> ExitCode {
-    let socket = phonorheos_core::paths::socket_path();
+    let socket = Endpoint::default_for_this_system();
     match args.first().map(String::as_str) {
         Some("--version") => {
             println!("phonorheos {}", phonorheos_core::version());
@@ -99,7 +151,7 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
     Ok(s)
 }
 
-fn say(socket: &Path, args: &[String]) -> Result<(), String> {
+fn say(socket: &Endpoint, args: &[String]) -> Result<(), String> {
     let s = parse_say(args)?;
     let mut body = serde_json::json!({ "text": s.text, "client": "phonorheos say" });
     if let Some(v) = s.voice {
@@ -132,10 +184,11 @@ fn say(socket: &Path, args: &[String]) -> Result<(), String> {
 }
 
 /// Reads the event stream from just after the item's `queued` event until its end.
-fn wait_for_end(socket: &Path, id: &str, after: u64) -> Result<(), String> {
-    let mut stream = connect(socket)?;
+fn wait_for_end(socket: &Endpoint, id: &str, after: u64) -> Result<(), String> {
+    let mut stream = socket.connect()?;
     let head = format!(
-        "GET /events?item={id}&last_id={after} HTTP/1.1\r\nHost: localhost\r\nUser-Agent: phonorheos say\r\nAccept: text/event-stream\r\n\r\n"
+        "GET /events?item={id}&last_id={after} HTTP/1.1\r\nHost: {}\r\nUser-Agent: phonorheos say\r\nAccept: text/event-stream\r\n\r\n",
+        socket.host()
     );
     stream
         .write_all(head.as_bytes())
@@ -164,22 +217,18 @@ fn wait_for_end(socket: &Path, id: &str, after: u64) -> Result<(), String> {
     Err("the app closed the stream before the text was spoken".into())
 }
 
-fn connect(socket: &Path) -> Result<UnixStream, String> {
-    UnixStream::connect(socket)
-        .map_err(|e| format!("phonorheos is not running ({}: {e})", socket.display()))
-}
-
 /// One request, read to its end; returns the status code and the body.
 fn request(
-    socket: &Path,
+    socket: &Endpoint,
     method: &str,
     path: &str,
     body: Option<&str>,
 ) -> Result<(u16, String), String> {
-    let mut stream = connect(socket)?;
+    let mut stream = socket.connect()?;
     let body = body.unwrap_or("");
     let head = format!(
-        "{method} {path} HTTP/1.1\r\nHost: localhost\r\nUser-Agent: phonorheos\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{body}",
+        "{method} {path} HTTP/1.1\r\nHost: {}\r\nUser-Agent: phonorheos\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{body}",
+        socket.host(),
         body.len()
     );
     stream
@@ -272,6 +321,33 @@ mod tests {
         let s = parse_say(&args(&["x"])).unwrap();
         assert!(!s.cache && !s.silent);
         assert!(parse_say(&args(&["--silent", "x"])).is_err());
+    }
+
+    #[test]
+    fn the_loopback_endpoint_sends_the_loopback_host() {
+        use std::net::TcpListener;
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let endpoint = Endpoint::Loopback(listener.local_addr().unwrap());
+        let server = std::thread::spawn(move || {
+            let (mut conn, _) = listener.accept().unwrap();
+            let mut head = Vec::new();
+            let mut byte = [0];
+            while !head.ends_with(b"\r\n\r\n") {
+                conn.read_exact(&mut byte).unwrap();
+                head.push(byte[0]);
+            }
+            conn.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}")
+                .unwrap();
+            String::from_utf8(head).unwrap()
+        });
+        let (code, body) = request(&endpoint, "GET", "/status", None).unwrap();
+        let head = server.join().unwrap();
+        assert_eq!((code, body.as_str()), (200, "{}"));
+        assert!(
+            head.contains(&format!("\r\nHost: {}\r\n", endpoint.host())),
+            "{head}"
+        );
+        assert!(endpoint.host().starts_with("127.0.0.1:"));
     }
 
     #[test]

@@ -92,7 +92,9 @@ function draw(s) {
       el("button", { class: "small", onclick: () => invoke("revoke_token", { id: t.id }).then(refresh) }, "Revoke")));
   $("autostart").checked = s.autostart;
   $("version").textContent = s.version;
-  $("socket").textContent = s.socket;
+  // Windows has no socket; its clients use 127.0.0.1.
+  $("where").textContent = s.socket ? "socket" : "address";
+  $("socket").textContent = s.socket || `127.0.0.1:${s.port}`;
 }
 
 function drawWords(words) {
