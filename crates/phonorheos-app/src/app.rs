@@ -79,12 +79,25 @@ impl State {
     }
 }
 
+/// The socket's path, shown in the window; none on Windows.
+fn socket() -> Option<PathBuf> {
+    #[cfg(unix)]
+    return Some(paths::socket_path());
+    #[cfg(not(unix))]
+    None
+}
+
 fn python(app: &tauri::App) -> PathBuf {
     if let Some(p) = std::env::var_os("PHONORHEOS_PYTHON") {
         return p.into();
     }
     let res = app.path().resource_dir().unwrap_or_default();
-    res.join("python/bin/python3.12")
+    // python-build-standalone's layout: python.exe at the top on Windows.
+    if cfg!(windows) {
+        res.join("python/python.exe")
+    } else {
+        res.join("python/bin/python3.12")
+    }
 }
 
 pub fn run() {
@@ -131,6 +144,9 @@ pub fn run() {
             app.manage(state.clone());
             let output = Output::start();
             tauri::async_runtime::spawn(player::run(core.clone(), helper, output, defaults));
+            // Windows has no Unix socket in Rust's standard library; its clients use
+            // 127.0.0.1.
+            #[cfg(unix)]
             tauri::async_runtime::spawn({
                 let core = core.clone();
                 async move {
@@ -219,7 +235,7 @@ async fn app_state(app: tauri::AppHandle, state: S<'_>) -> Result<Value, String>
         .collect();
     Ok(json!({
         "version": phonorheos_core::version(),
-        "socket": paths::socket_path(),
+        "socket": socket(),
         "port": phonorheos_core::PORT,
         "voice": state.core.voice(),
         "queue": state.core.queue(),

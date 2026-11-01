@@ -115,7 +115,7 @@ jobs:
           printf '%s' "$APPLE_API_KEY_B64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
           echo "APPLE_API_KEY=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
       - name: Tauri
-        run: cargo install tauri-cli --version "^2" --locked
+        run: scripts/install-tauri-cli
       - name: Build the app and its disk image
         run: scripts/build-app
       - name: Notarise and staple
@@ -142,7 +142,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev patchelf file libfuse2t64
       - name: Tauri
-        run: cargo install tauri-cli --version "^2" --locked
+        run: scripts/install-tauri-cli
       - name: Build the .deb and the AppImage
         run: scripts/build-app
       - uses: actions/upload-artifact@v6
@@ -153,8 +153,32 @@ jobs:
             dist/*.deb
             dist/*.AppImage
 
+  # The Windows installer, for x86_64: an NSIS setup.exe, unsigned (docs/why.md says why), checked
+  # by installing it on the runner and asking the app and the command to answer.
+  installers-windows:
+    needs: gate
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - name: Tauri
+        run: scripts/install-tauri-cli
+      - name: Build the installer
+        run: scripts/build-app
+      - name: Install it and check that it answers
+        run: scripts/smoke-windows
+        timeout-minutes: 30
+      - uses: actions/upload-artifact@v6
+        with:
+          name: installers-windows
+          if-no-files-found: error
+          path: dist/*-setup.exe
+
   changelog:
-    needs: [gate, installers-macos, installers-linux]
+    needs: [gate, installers-macos, installers-linux, installers-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write   # scoped here — only this job commits CHANGELOG.md back to main

@@ -1,6 +1,6 @@
 name: Test
 
-# The Rust workspace builds, is lint-clean and passes its tests on macOS and Ubuntu,
+# The Rust workspace builds, is lint-clean and passes its tests on macOS, Ubuntu and Windows,
 # and the Python helper passes its checks. The helper's unit tests need no voice
 # (Kokoro and PyTorch are its `voice` extra, installed only into the app's bundled Python).
 
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, ubuntu-24.04]
+        os: [macos-15, ubuntu-24.04, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -39,7 +39,12 @@ jobs:
         run: cargo test
 
   helper:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows too: the helper reads its requests in a way only Windows tests fully.
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: helper

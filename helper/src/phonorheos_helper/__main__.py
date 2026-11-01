@@ -8,11 +8,12 @@ the chunks of an item being spoken; everything else runs in order on the main th
 
 from __future__ import annotations
 
+import os
 import queue
 import sys
 import threading
 from collections.abc import Iterator
-from typing import Any, Protocol
+from typing import IO, Any, Protocol
 
 from . import clock, protocol, words
 from .protocol import ProtocolError, Writer
@@ -130,10 +131,26 @@ def run(helper: Helper, lines: Any) -> None:
             break
 
 
+def private_input() -> IO[str]:
+    """The requests' pipe, moved off descriptor 0, with the null device put there.
+
+    On Windows a thread blocked reading a pipe holds up every other call on that
+    handle (CPython issues 26882 and 34780), and a library that inspects stdin whilst
+    the voice loads would wait for the next request. Read as UTF-8 on every system,
+    since a Windows pipe is otherwise read in the locale's code page.
+    """
+    fd = os.dup(sys.stdin.fileno())
+    null = os.open(os.devnull, os.O_RDONLY)
+    os.dup2(null, 0)
+    os.close(null)
+    return open(fd, encoding="utf-8")
+
+
 def main() -> int:
     from .engine import Engine
 
-    run(Helper(Engine(), Writer()), sys.stdin)
+    sys.stdout.reconfigure(encoding="utf-8")  # ty: ignore[unresolved-attribute]
+    run(Helper(Engine(), Writer()), private_input())
     return 0
 
 
