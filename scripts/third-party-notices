@@ -50,7 +50,9 @@ def python(site):
 
 
 def main(target, pydir, out):
-    sites = list(pathlib.Path(pydir).glob("lib/python3*/site-packages"))
+    # python-build-standalone keeps them in lib/python3.12/site-packages, on Windows in
+    # Lib/site-packages.
+    sites = [*pathlib.Path(pydir).glob("lib/python3*/site-packages"), *pathlib.Path(pydir).glob("Lib/site-packages")]
     entries = list(rust(target)) + [e for s in sites for e in python(s)]
     strong = [(n, lic) for n, lic, _ in entries if STRONG.search(lic) and not re.search(r"\bL?GPL.*exception|LGPL|Lesser", lic, re.I)]
     if strong:

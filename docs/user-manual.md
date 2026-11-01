@@ -1,6 +1,6 @@
 # phonorheos user manual
 
-phonorheos is a desktop app for macOS and Linux that speaks the text other apps send it. It keeps one queue, so that two apps never talk over each other, and it makes its speech on your own machine with Kokoro, an open-weight voice. This manual is for using it. The [README](../README.md) describes the interface for programmers and how the app is built.
+phonorheos is a desktop app for macOS, Linux and Windows that speaks the text other apps send it. It keeps one queue, so that two apps never talk over each other, and it makes its speech on your own machine with Kokoro, an open-weight voice. This manual is for using it. The [README](../README.md) describes the interface for programmers and how the app is built.
 
 ## Installing
 
@@ -20,6 +20,21 @@ phonorheos is built for x86_64 Linux, on Ubuntu 24.04; its `.deb` has been tried
 - **The AppImage:** download `phonorheos-<version>-linux-amd64.AppImage`, make it executable with `chmod +x`, and open it. Nothing is installed. It has not yet been tried on a desktop.
 
 The Linux build makes speech on the processor, not on a graphics card.
+
+### Windows
+
+phonorheos is built for Windows 11 on x86_64. It has not yet been tried on a Windows desktop; it is checked only by installing it on a test machine without speakers.
+
+1. Download `phonorheos-<version>-windows-x64-setup.exe`.
+2. Run it. It installs phonorheos for every account on the machine, into `C:\Program Files\phonorheos`, so Windows asks for an administrator. It adds phonorheos to the Start menu and the `phonorheos` command to the system path, for terminals opened afterwards.
+3. Open phonorheos from the Start menu.
+
+The installer is not signed. Signing a Windows app publishes the signer's city, state and country in every copy, which ParkviewLab, not being a registered business, could only do with a person's own; so Windows treats it as an app from an unknown publisher:
+
+- **Where Smart App Control is on,** Windows refuses to run it, and offers no way to allow this one app. It can run only if Smart App Control is turned off (Windows Security → App & browser control → Smart App Control), which since Windows 11's April 2026 update can be done without reinstalling Windows. Whether to do that is your decision; it applies to every app, not only this one.
+- **Where Smart App Control is off,** SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
+
+Speech is made on the processor. Data is kept in `%LOCALAPPDATA%\phonorheos`.
 
 ### The first start
 
@@ -104,7 +119,7 @@ The `phonorheos` command talks to the running app and opens no window:
 | `phonorheos stop` | Silences everything. |
 | `phonorheos status` | Prints the version, the voice's state, what is being spoken and how many items wait. |
 
-On Linux the package puts the command on your path. On macOS the command is the app itself; put it on your path once, with your password:
+On Linux the package puts the command on your path, and on Windows the installer does, for terminals opened after it. On macOS the command is the app itself; put it on your path once, with your password:
 
 ```bash
 sudo mkdir -p /usr/local/bin && sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos
@@ -126,7 +141,7 @@ A session started afterwards has two tools: `say`, which speaks text (optionally
 
 ## Privacy
 
-Speech is made on your machine. The text phonorheos is sent is kept only in memory (in the queue, in the last 1000 events it reports to other programs, and in the window's list of 50) and is gone when it quits. Every program that reads phonorheos's events sees every piece of text, from whichever app it came. phonorheos's data folder (`~/Library/Application Support/phonorheos/` on macOS, `~/.local/share/phonorheos/` on Linux) holds the settings, the tokens as hashes rather than in readable form, and the downloaded voice. The network is used only to download the voice on the first start and, when you switch it on, to hear other machines on your network.
+Speech is made on your machine. The text phonorheos is sent is kept only in memory (in the queue, in the last 1000 events it reports to other programs, and in the window's list of 50) and is gone when it quits. Every program that reads phonorheos's events sees every piece of text, from whichever app it came. phonorheos's data folder (`~/Library/Application Support/phonorheos/` on macOS, `~/.local/share/phonorheos/` on Linux, `%LOCALAPPDATA%\phonorheos\` on Windows) holds the settings, the tokens as hashes rather than in readable form, and the downloaded voice. The network is used only to download the voice on the first start and, when you switch it on, to hear other machines on your network.
 
 ## When something goes wrong
 
@@ -134,6 +149,7 @@ Speech is made on your machine. The text phonorheos is sent is kept only in memo
 - **The state line says the voice stopped.** phonorheos starts it again on its own and says why it stopped. If it keeps stopping, quit and reopen the app.
 - **The first start never finishes downloading.** The voice comes from Hugging Face; check the network, then reopen the app to try again.
 - **`phonorheos say` says it cannot connect.** The app is not running; open it first.
+- **Windows says it cannot run phonorheos, or shows "Windows protected your PC".** The installer is not signed; see [Windows](#windows).
 - **Another machine is refused.** Check that the network is switched on, that the token was copied whole and has not been revoked, and that the address and port 35861 are right.
 - **A word sounds wrong.** Add it to the word list.
 

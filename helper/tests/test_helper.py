@@ -104,3 +104,17 @@ def test_quit_stops_the_loop():
     voice = FakeVoice()
     ev, _ = events([{"op": "quit"}, {"op": "speak", "id": "a", "text": "x"}], voice)
     assert ev == [] and voice.spoken == []
+
+
+def test_the_requests_are_read_privately_as_utf8_and_stdin_is_left_empty():
+    import subprocess
+    import sys
+
+    code = (
+        "import os; from phonorheos_helper.__main__ import private_input; "
+        "f = private_input(); print(ascii(f.readline().strip()), os.read(0, 1) == b'')"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", code], input="fQnQ ɹˈiːQs\n".encode(), capture_output=True, check=True
+    )
+    assert out.stdout.decode().strip() == f"{'fQnQ ɹˈiːQs'!a} True"

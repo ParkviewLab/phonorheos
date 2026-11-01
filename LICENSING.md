@@ -33,6 +33,8 @@ The weak copyleft components, all carried unmodified:
 | [tqdm](https://github.com/tqdm/tqdm) | Hugging Face's libraries and spaCy (progress bars) | MPL-2.0 and MIT |
 | The Rust crates `cssparser`, `cssparser-macros`, `selectors`, `dtoa-short` and `option-ext` | Tauri and its autostart plugin (HTML parsing; locating the user's folders) | MPL-2.0 |
 
+On Windows, the voice's packages bring two more, both permissive: [colorama](https://github.com/tartley/colorama) (BSD-3-Clause) and [win32-setctime](https://github.com/Delgan/win32-setctime) (MIT). The Windows installer is made with [NSIS](https://nsis.sourceforge.io/License), whose installer code and plug-ins are under the zlib/libpng licence, with its bzip2 compression module under the bzip2 licence (LZMA, under CPL 1.0, is not used), and Tauri's [nsis_tauri_utils](https://github.com/tauri-apps/nsis-tauri-utils) plug-in (MIT or Apache-2.0).
+
 The main parts:
 
 | Part | License |

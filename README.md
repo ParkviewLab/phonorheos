@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC-BY-4.0
 
 # phonorheos
 
-A desktop app for macOS and Linux that speaks the text other apps send it. Apps on the same machine, or across the LAN, send text over a small HTTP interface; phonorheos queues it, so that two apps never talk over each other, and reports when each piece starts and finishes.
+A desktop app for macOS, Linux and Windows that speaks the text other apps send it. Apps on the same machine, or across the LAN, send text over a small HTTP interface; phonorheos queues it, so that two apps never talk over each other, and reports when each piece starts and finishes.
 
 Download: https://parkviewlab.github.io/phonorheos/downloads/  
 Documentation, including the [user manual](https://parkviewlab.github.io/phonorheos/docs/user-manual.html): https://parkviewlab.github.io/phonorheos/
@@ -14,7 +14,7 @@ The voice is [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M), an open-weight
 
 ## Status
 
-Tried in use on a MacBook Air (macOS 26) and, from its `.deb`, on Ubuntu Desktop 26.04, including a client on the LAN holding a token; the Linux packages are built on Ubuntu 24.04. The AppImage has not yet been tried on a desktop.
+Tried in use on a MacBook Air (macOS 26) and, from its `.deb`, on Ubuntu Desktop 26.04, including a client on the LAN holding a token; the Linux packages are built on Ubuntu 24.04. The AppImage has not yet been tried on a desktop. The Windows installer is built and checked on GitHub's Windows runners only, and has not yet been tried on a Windows desktop.
 
 It is the companion of [graptostream](https://github.com/ParkviewLab/graptostream): graptostream turns speech into text that apps can read; phonorheos turns text back into speech. Together they let an app, or an AI agent, be spoken to and answer aloud.
 
@@ -28,8 +28,9 @@ It is the companion of [graptostream](https://github.com/ParkviewLab/graptostrea
   ```
 
   or run the AppImage, which needs no installing: `chmod +x` it, then open it.
+- **Windows:** Windows 11 on x86_64. Run `phonorheos-<version>-windows-x64-setup.exe`, which installs phonorheos for every account (it asks for an administrator) and puts the `phonorheos` command on the system path. It is not signed: where Smart App Control is on, Windows refuses to run it, and where it is off, SmartScreen asks first ("More info", then "Run anyway"). The [user manual](docs/user-manual.md#windows) explains why and what to do.
 
-The first time it opens, phonorheos downloads its speech models and its 28 voices from Hugging Face, about 330 MB, and shows the progress in its window; after that it starts and speaks offline. The installers are large (about 240 MB to download on macOS and 390 MB on Linux; about 930 MB once installed) because they carry their own Python with PyTorch, which runs the voice.
+The first time it opens, phonorheos downloads its speech models and its 28 voices from Hugging Face, about 330 MB, and shows the progress in its window; after that it starts and speaks offline. The installers are large (about 240 MB to download on macOS, 390 MB on Linux and 190 MB on Windows; about 930 MB once installed) because they carry their own Python with PyTorch, which runs the voice.
 
 ## Using it
 
@@ -55,7 +56,7 @@ Closing the window quits phonorheos.
 
 phonorheos serves HTTP/1.1 on:
 
-- the Unix socket `~/Library/Application Support/phonorheos/phonorheos.sock` (macOS) or `$XDG_RUNTIME_DIR/phonorheos/phonorheos.sock` (Linux; in the data folder where `XDG_RUNTIME_DIR` is not set), for your own programs (mode 0600: only your account can connect);
+- the Unix socket `~/Library/Application Support/phonorheos/phonorheos.sock` (macOS) or `$XDG_RUNTIME_DIR/phonorheos/phonorheos.sock` (Linux; in the data folder where `XDG_RUNTIME_DIR` is not set), for your own programs (there is no socket on Windows, where the command uses `127.0.0.1`) (mode 0600: only your account can connect);
 - `http://127.0.0.1:35861`, for programs on this machine. Requests must name `localhost:35861` or `127.0.0.1:35861` as their host, and requests from web pages are refused (by their `Origin` or `Sec-Fetch-Site` header). Any account on the machine can reach this address; on a machine shared with others, use the socket;
 - when switched on, the same port on the LAN, where every request from another machine carries `Authorization: Bearer <token>`; programs on this machine keep the loopback rules. It is advertised by mDNS as `_phonorheos._tcp`.
 
@@ -125,7 +126,7 @@ Speech is made on this machine. The text phonorheos is sent is kept only in memo
 
 ## Building
 
-The app is Rust (Tauri 2) with its voice in a Python helper that it starts and talks to over a pipe; see [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the layout and the checks, and [`docs/why.md`](docs/why.md) for the requirements, the evidence and the decisions behind it. `scripts/build-app` builds the installers into `dist/` on either system: it prepares the bundled Python (`scripts/prepare-python`), writes the third-party notices, and runs Tauri. It needs Rust, `uv`, and the Tauri command-line tool (`cargo install tauri-cli --version "^2" --locked`); on Linux also WebKitGTK, ALSA's headers and FUSE (`libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev patchelf file libfuse2t64`). On macOS, `SIGN_IDENTITY` names the signing identity; without it the build is signed ad hoc.
+The app is Rust (Tauri 2) with its voice in a Python helper that it starts and talks to over a pipe; see [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the layout and the checks, and [`docs/why.md`](docs/why.md) for the requirements, the evidence and the decisions behind it. `scripts/build-app` builds the installers into `dist/` on each system (on Windows, in Git Bash): it prepares the bundled Python (`scripts/prepare-python`), writes the third-party notices, and runs Tauri. It needs Rust, `uv`, and the Tauri command-line tool (`cargo install tauri-cli --version "^2" --locked`); on Linux also WebKitGTK, ALSA's headers and FUSE (`libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev patchelf file libfuse2t64`). On macOS, `SIGN_IDENTITY` names the signing identity; without it the build is signed ad hoc. On Windows the MSI is unsigned, and `scripts/smoke-windows` installs it and checks that the app and the command answer.
 
 To run it while developing, give it a Python with the helper's voice installed:
 
@@ -138,13 +139,13 @@ PHONORHEOS_PYTHON=/tmp/phonorheos-python/bin/python3 cargo run -p phonorheos-app
 
 | Variable | What it sets | Default |
 |---|---|---|
-| `PHONORHEOS_DATA` | The data folder: settings and models | `~/Library/Application Support/phonorheos/` (macOS), `$XDG_DATA_HOME/phonorheos/` (Linux) |
-| `PHONORHEOS_SOCKET` | The Unix socket's path | See [The interface](#the-interface) |
+| `PHONORHEOS_DATA` | The data folder: settings and models | `~/Library/Application Support/phonorheos/` (macOS), `$XDG_DATA_HOME/phonorheos/` (Linux), `%LOCALAPPDATA%\phonorheos\` (Windows) |
+| `PHONORHEOS_SOCKET` | The Unix socket's path (macOS and Linux) | See [The interface](#the-interface) |
 | `PHONORHEOS_PYTHON` | The Python that runs the voice, for development | The app's own, in its resources |
 
 ## Releasing
 
-Releases follow the ParkviewLab handbook's [`releases.md`](https://github.com/ParkviewLab/handbook/blob/main/docs/releases.md). A `v*` tag on `main` runs `.github/workflows/release.yml`: the gate checks the tag against `VERSION.txt`; the macOS job builds the app with `scripts/build-app`, its bundled Python signed file by file with the organisation's Developer ID, and `scripts/notarize` notarises and staples the disk image; the Linux job builds the `.deb` and the AppImage on Ubuntu 24.04; the last job writes the changelog and creates the GitHub Release with the three installers.
+Releases follow the ParkviewLab handbook's [`releases.md`](https://github.com/ParkviewLab/handbook/blob/main/docs/releases.md). A `v*` tag on `main` runs `.github/workflows/release.yml`: the gate checks the tag against `VERSION.txt`; the macOS job builds the app with `scripts/build-app`, its bundled Python signed file by file with the organisation's Developer ID, and `scripts/notarize` notarises and staples the disk image; the Linux job builds the `.deb` and the AppImage on Ubuntu 24.04; the Windows job builds the MSI and checks it with `scripts/smoke-windows`; the last job writes the changelog and creates the GitHub Release with the four installers.
 
 ## Licence
 

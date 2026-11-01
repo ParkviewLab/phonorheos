@@ -12,7 +12,7 @@ wins and this file is re-authored from it.
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ParkviewLab · phonorheos user manual</title>
-<meta name="description" content="How to install and use phonorheos, the desktop app for macOS and Linux that speaks the text other apps send it, and makes its speech on your own machine with Kokoro, an open-weight voice.">
+<meta name="description" content="How to install and use phonorheos, the desktop app for macOS, Linux and Windows that speaks the text other apps send it, and makes its speech on your own machine with Kokoro, an open-weight voice.">
 <style>
 /* ===========================================================================
    ParkviewLab brand: see the handbook's docs/brand.md (single source of truth).
@@ -110,6 +110,9 @@ p, li { font-size:16.5px; }
 .card ol { padding-left:20px; margin:10px 0 0; }
 .card ol li { margin-bottom:6px; }
 .card .req { margin:0; color:var(--muted); }
+.winroute { margin-top:20px; }
+.card ul { padding-left:20px; margin:10px 0 0; }
+.card ul li { margin-bottom:6px; }
 .ac-teal{--ac:var(--teal-deep)} .ac-sage{--ac:#4f7d5a}
 .family { border:2px solid var(--ink); background:var(--paper-2); padding:16px 16px 14px; display:flex; flex-direction:column; }
 .family > h3 { margin:0 0 4px; }
@@ -270,7 +273,7 @@ footer.site {
   <div class="hero">
     <h1>phonorheos user manual</h1>
     <div class="rule"></div>
-    <p class="lede">phonorheos is a desktop app for macOS and Linux that speaks the text other apps send it. It keeps one queue, so that two apps never talk over each other, and it makes its speech on your own machine with Kokoro, an open-weight voice. This manual is for using it. The <a href="https://github.com/ParkviewLab/phonorheos#readme">README</a> describes the interface for programmers and how the app is built.</p>
+    <p class="lede">phonorheos is a desktop app for macOS, Linux and Windows that speaks the text other apps send it. It keeps one queue, so that two apps never talk over each other, and it makes its speech on your own machine with Kokoro, an open-weight voice. This manual is for using it. The <a href="https://github.com/ParkviewLab/phonorheos#readme">README</a> describes the interface for programmers and how the app is built.</p>
   </div>
 
   <nav class="toc" aria-label="Contents">
@@ -321,6 +324,23 @@ footer.site {
         </div>
         <p class="note">The Linux build makes speech on the processor, not on a graphics card.</p>
       </div>
+    </div>
+
+    <div class="card ac-teal winroute" id="windows">
+      <div class="kind">setup.exe · unsigned</div>
+      <h3>Windows</h3>
+      <p class="req">phonorheos is built for Windows 11 on x86_64. It has not yet been tried on a Windows desktop; it is checked only by installing it on a test machine without speakers.</p>
+      <ol>
+        <li>Download <code>phonorheos-&lt;version&gt;-windows-x64-setup.exe</code>.</li>
+        <li>Run it. It installs phonorheos for every account on the machine, into <code>C:\Program Files\phonorheos</code>, so Windows asks for an administrator. It adds phonorheos to the Start menu and the <code>phonorheos</code> command to the system path, for terminals opened afterwards.</li>
+        <li>Open phonorheos from the Start menu.</li>
+      </ol>
+      <p>The installer is not signed. Signing a Windows app publishes the signer's city, state and country in every copy, which ParkviewLab, not being a registered business, could only do with a person's own; so Windows treats it as an app from an unknown publisher:</p>
+      <ul>
+        <li><strong>Where Smart App Control is on,</strong> Windows refuses to run it, and offers no way to allow this one app. It can run only if Smart App Control is turned off (Windows Security → App &amp; browser control → Smart App Control), which since Windows 11's April 2026 update can be done without reinstalling Windows. Whether to do that is your decision; it applies to every app, not only this one.</li>
+        <li><strong>Where Smart App Control is off,</strong> SmartScreen shows “Windows protected your PC”. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
+      </ul>
+      <p>Speech is made on the processor. Data is kept in <code>%LOCALAPPDATA%\phonorheos</code>.</p>
     </div>
 
     <div class="firststart">
@@ -495,7 +515,7 @@ footer.site {
       </table>
     </div>
 
-    <p class="prose">On Linux the package puts the command on your path. On macOS the command is the app itself; put it on your path once, with your password:</p>
+    <p class="prose">On Linux the package puts the command on your path, and on Windows the installer does, for terminals opened after it. On macOS the command is the app itself; put it on your path once, with your password:</p>
 <pre><code>sudo mkdir -p /usr/local/bin &amp;&amp; sudo ln -sf /Applications/phonorheos.app/Contents/MacOS/phonorheos /usr/local/bin/phonorheos</code></pre>
   </section>
 
@@ -520,7 +540,7 @@ footer.site {
       <div><dt>Speech</dt><dd>Speech is made on your machine.</dd></div>
       <div><dt>Text</dt><dd>The text phonorheos is sent is kept only in memory (in the queue, in the last 1000 events it reports to other programs, and in the window's list of 50) and is gone when it quits.</dd></div>
       <div><dt>Event readers</dt><dd>Every program that reads phonorheos's events sees every piece of text, from whichever app it came.</dd></div>
-      <div><dt>Data folder</dt><dd>phonorheos's data folder (<code>~/Library/Application Support/phonorheos/</code> on macOS, <code>~/.local/share/phonorheos/</code> on Linux) holds the settings, the tokens as hashes rather than in readable form, and the downloaded voice.</dd></div>
+      <div><dt>Data folder</dt><dd>phonorheos's data folder (<code>~/Library/Application Support/phonorheos/</code> on macOS, <code>~/.local/share/phonorheos/</code> on Linux, <code>%LOCALAPPDATA%\phonorheos\</code> on Windows) holds the settings, the tokens as hashes rather than in readable form, and the downloaded voice.</dd></div>
       <div><dt>Network</dt><dd>The network is used only to download the voice on the first start and, when you switch it on, to hear other machines on your network.</dd></div>
     </dl>
   </section>
@@ -533,6 +553,7 @@ footer.site {
       <li><span class="sym">The state line says the voice stopped.</span><span>phonorheos starts it again on its own and says why it stopped. If it keeps stopping, quit and reopen the app.</span></li>
       <li><span class="sym">The first start never finishes downloading.</span><span>The voice comes from Hugging Face; check the network, then reopen the app to try again.</span></li>
       <li><span class="sym"><code>phonorheos say</code> says it cannot connect.</span><span>The app is not running; open it first.</span></li>
+      <li><span class="sym">Windows says it cannot run phonorheos, or shows “Windows protected your PC”.</span><span>The installer is not signed; see <a href="#windows">Windows</a>.</span></li>
       <li><span class="sym">Another machine is refused.</span><span>Check that the network is switched on, that the token was copied whole and has not been revoked, and that the address and port 35861 are right.</span></li>
       <li><span class="sym">A word sounds wrong.</span><span>Add it to the <a href="#words">word list</a>.</span></li>
     </ul>

@@ -115,7 +115,8 @@ async fn run_once(
     said: &broadcast::Sender<Said>,
     words: &mut BTreeMap<String, String>,
 ) -> String {
-    let mut child = match Command::new(&launch.python)
+    let mut command = Command::new(&launch.python);
+    command
         .args(["-I", "-B", "-m", "phonorheos_helper"])
         .env("HF_HOME", &launch.models)
         .env("HF_HUB_DISABLE_TELEMETRY", "1")
@@ -123,9 +124,11 @@ async fn run_once(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .kill_on_drop(true)
-        .spawn()
-    {
+        .kill_on_drop(true);
+    // Without a console window of its own (CREATE_NO_WINDOW).
+    #[cfg(windows)]
+    command.creation_flags(0x0800_0000);
+    let mut child = match command.spawn() {
         Ok(c) => c,
         Err(e) => {
             return format!(

@@ -1,0 +1,53 @@
+#!/bin/bash
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Checks the Windows installer on a CI runner (Git Bash): the setup.exe in dist/
+# installs silently, the command's folder is on the system PATH, the app starts,
+# answers /status, loads its voice, lists `say` at /mcp, and the command reaches it;
+# then the uninstaller takes the folder off the PATH. The runner has no speakers, so
+# what is heard is not checked.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+SETUP=$(ls dist/*-setup.exe)
+# Through PowerShell, since Git Bash rewrites a switch such as /S into a path.
+run() { timeout 600 powershell -NoProfile -Command "\$p = Start-Process -Wait -PassThru -FilePath '$1' -ArgumentList $2; exit \$p.ExitCode"; }
+on_path() {
+  reg query 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' //v Path | grep -qi 'phonorheos\\bin'
+}
+echo "installing $SETUP"
+run "$(cygpath -w "$SETUP")" "'/S'" || { echo "the installer failed" >&2; exit 1; }
+DIR="/c/Program Files/phonorheos"
+ls "$DIR/phonorheos.exe" "$DIR/bin/phonorheos.exe" "$DIR/python/python.exe"
+on_path || { echo "the command's folder is not on the system PATH" >&2; exit 1; }
+echo "starting the app"
+"$DIR/phonorheos.exe" >/dev/null 2>&1 &
+URL=http://127.0.0.1:35861
+state=""
+# The first start downloads the model and all the voices, about three minutes on a
+# runner; the progress is printed every 30 s.
+deadline=$((SECONDS + 600)); next=0
+while [ $SECONDS -lt $deadline ]; do
+  body=$(curl -fs --max-time 5 "$URL/status" || true)
+  state=$(printf '%s' "$body" | python -c 'import json,sys; print(json.load(sys.stdin)["voice"]["state"])' 2>/dev/null || true)
+  [ "$state" = ready ] && break
+  if [ $SECONDS -ge $next ]; then echo "${SECONDS}s: $(printf '%s' "$body" | python -c 'import json,sys; print(json.load(sys.stdin)["voice"])' 2>/dev/null || echo 'no answer')"; next=$((SECONDS + 30)); fi
+  sleep 2
+done
+curl -fs --max-time 10 "$URL/status"; echo
+[ "$state" = ready ] || { echo "the voice did not become ready (last state: ${state:-no answer})" >&2; exit 1; }
+echo "listing the MCP tools"
+curl -fs --max-time 10 "$URL/mcp" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -q '"name":"say"' \
+  || { echo "/mcp does not list say" >&2; exit 1; }
+echo "the command"
+timeout 30 "$DIR/bin/phonorheos.exe" status
+timeout 120 "$DIR/bin/phonorheos.exe" say "Hello from Windows."
+echo "uninstalling"
+# The app and its helper, as a tree, so that the bundled files are free.
+taskkill //F //T //IM phonorheos.exe >/dev/null 2>&1 || true
+sleep 3
+# _?= runs the uninstaller in place, so that this waits for it.
+run "$(cygpath -w "$DIR/uninstall.exe")" "'/S', '_?=$(cygpath -w "$DIR")'" || { echo "the uninstaller failed" >&2; exit 1; }
+! on_path || { echo "the uninstaller left the command's folder on the system PATH" >&2; exit 1; }
+echo "the Windows installer works"
