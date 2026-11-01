@@ -117,9 +117,9 @@ def ensure_models(british: bool, progress: Progress) -> None:
     for repo, name, size in wanted:
         stop = threading.Event()
 
-        def watch(name: str = name, base: int = done, stop: threading.Event = stop) -> None:
+        def watch(name: str = name, base: int = done, size: int = size, stop: threading.Event = stop) -> None:
             while not stop.wait(0.5):
-                progress(name, min(base + _incomplete_bytes(), total), total)
+                progress(name, min(base + _incomplete_bytes(), base + size), total)
 
         t = threading.Thread(target=watch, daemon=True)
         t.start()
