@@ -22,9 +22,14 @@ echo "starting the app"
 "$DIR/phonorheos.exe" >/dev/null 2>&1 &
 URL=http://127.0.0.1:35861
 state=""
-for _ in $(seq 1 180); do
-  state=$(curl -fs --max-time 5 "$URL/status" | python -c 'import json,sys; print(json.load(sys.stdin)["voice"]["state"])' 2>/dev/null || true)
+# The first start downloads the model and all the voices, which can take several
+# minutes on a runner; the progress is printed every 30 s.
+deadline=$((SECONDS + 900)); next=0
+while [ $SECONDS -lt $deadline ]; do
+  body=$(curl -fs --max-time 5 "$URL/status" || true)
+  state=$(printf '%s' "$body" | python -c 'import json,sys; print(json.load(sys.stdin)["voice"]["state"])' 2>/dev/null || true)
   [ "$state" = ready ] && break
+  if [ $SECONDS -ge $next ]; then echo "${SECONDS}s: $(printf '%s' "$body" | python -c 'import json,sys; print(json.load(sys.stdin)["voice"])' 2>/dev/null || echo 'no answer')"; next=$((SECONDS + 30)); fi
   sleep 2
 done
 curl -fs --max-time 10 "$URL/status"; echo
