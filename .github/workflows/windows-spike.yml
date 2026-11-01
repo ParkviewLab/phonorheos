@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: Windows spike
+
+# Temporary, removed before the pull request: does the bundled Python install on
+# Windows and make speech with no espeak-ng?
+
+on:
+  push:
+    branches: [feature-windows-build]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - name: Prepare the bundled Python
+        run: time scripts/prepare-python
+      - name: Make speech with the helper
+        run: |
+          PY=crates/phonorheos-app/python/python.exe
+          export HF_HOME="$RUNNER_TEMP/models" HF_HUB_DISABLE_TELEMETRY=1 TOKENIZERS_PARALLELISM=false
+          printf '%s\n' '{"op":"speak","id":"a","text":"Hello from Windows. It is 10:43 AM."}' '{"op":"quit"}' \
+            | (time "$PY" -I -B -m phonorheos_helper) > out.jsonl
+          "$PY" -I -c "
+          import json, sys
+          ev = [json.loads(l) for l in open('out.jsonl', encoding='utf-8') if l.strip()]
+          kinds = [e['event'] for e in ev]
+          print({k: kinds.count(k) for k in set(kinds)})
+          errs = [e for e in ev if e['event'] == 'error']
+          print(errs)
+          sys.exit(0 if 'audio' in kinds and not errs else 1)
+          "

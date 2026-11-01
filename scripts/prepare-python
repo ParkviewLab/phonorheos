@@ -5,19 +5,24 @@
 # Puts the Python the app carries into crates/phonorheos-app/python: a standalone
 # Python 3.12 (python-build-standalone, through uv) with the helper and its voice
 # installed by `uv sync` exactly as helper/uv.lock pins them. espeak-ng is kept out by
-# the override in helper/pyproject.toml, and checked for here. On macOS, with
+# the override in helper/pyproject.toml, and checked for here. On Windows (Git Bash) the
+# Python's own layout differs: python.exe at the top and Lib/site-packages. On macOS, with
 # SIGN_IDENTITY set, every compiled file is signed with the hardened runtime and a
 # timestamp, as notarisation requires.
 set -e
 cd "$(dirname "$0")/.."
 OUT=crates/phonorheos-app/python
 uv python install 3.12
-SRC=$(dirname "$(dirname "$(uv python find --managed-python 3.12)")")
+PY=$(uv python find --managed-python 3.12)
+case "$(uname)" in
+  MINGW* | MSYS*) SRC=$(dirname "$(cygpath -u "$PY")"); SITE=Lib/site-packages ;;
+  *) SRC=$(dirname "$(dirname "$PY")"); SITE=lib/python3.12/site-packages ;;
+esac
 rm -rf "$OUT"
 cp -RL "$SRC" "$OUT"
 UV_PROJECT_ENVIRONMENT="$PWD/$OUT" uv sync --project helper --frozen --extra voice --no-dev --no-editable
 find "$OUT" -name __pycache__ -prune -exec rm -rf {} +
-if ls "$OUT"/lib/python3.12/site-packages | grep -iE '^(espeak|phonemizer)'; then
+if ls "$OUT/$SITE" | grep -iE '^(espeak|phonemizer)'; then
   echo "espeak-ng or phonemizer found in the bundled Python" >&2
   exit 1
 fi
