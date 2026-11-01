@@ -241,6 +241,7 @@ async fn end_to_end_over_the_unix_socket_with_curl() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(unix)]
 async fn curl_version() -> String {
     let out = tokio::process::Command::new("curl")
         .arg("--version")

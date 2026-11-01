@@ -170,6 +170,7 @@ jobs:
         run: scripts/build-app
       - name: Install it and check that it answers
         run: scripts/smoke-windows
+        timeout-minutes: 20
       - uses: actions/upload-artifact@v6
         with:
           name: installers-windows
