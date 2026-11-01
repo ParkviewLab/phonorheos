@@ -4,6 +4,20 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.4.0] - 2026-11-01
+
+### Highlights
+
+phonorheos now runs on Windows 11 (x86_64), distributed as an unsigned NSIS `setup.exe` that installs for all accounts into `C:\Program Files\phonorheos`; the MSI has been dropped. The command-line program is installed separately in `bin\`, added to the system path by the installer and removed again on uninstall, and reaches the app over `127.0.0.1:35861`, while macOS and Linux keep the Unix socket. Download progress now only reaches the total once the last file is complete, and the README, user manual, downloads page and licensing notes have been updated for the Windows installer.
+
+### Features
+
+- Phonorheos on Windows (setup.exe) (#26)
+
+### Maintenance
+
+- The release jobs install Tauri's prebuilt CLI (#27)
+
 ## [v0.3.1] - 2026-10-31
 
 ### Highlights
