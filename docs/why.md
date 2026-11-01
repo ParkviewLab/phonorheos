@@ -66,7 +66,7 @@ All rulings are the owner's.
 |---|---|---|---|
 | D1 | The name phonorheos | 2026-10-29 | |
 | D2 | ParkviewLab, public | 2026-10-29 | |
-| D3 | AGPL-3.0-or-later for code, CC-BY-4.0 for documents, brand marks reserved, with REUSE and `LICENSING.md`; Kokoro's weights and voices are Apache-2.0 | 2026-10-29 | Dependencies were first required to be permissive; see W1 |
+| D3 | AGPL-3.0-or-later for code, CC-BY-4.0 for documents, brand marks reserved, with REUSE and `LICENSING.md`; Kokoro's weights and voices are Apache-2.0 | 2026-10-29 | Dependencies were first required to be permissive; see L1 |
 | D4 | Tauri 2 with plain HTML, CSS and JavaScript, no Node or npm, so that the repository holds Rust and Python only | 2026-10-29 | As ruled |
 | D5 | Models downloaded from Hugging Face on first run, with progress in the window | 2026-10-29 | All 28 English voices are fetched once; later starts run offline |
 | D6 | PyTorch accepted, the CPU-only build on Linux; a voice without PyTorch is an idea for later | 2026-10-29 | In `docs/in-flight_ideas.md` |
@@ -77,7 +77,7 @@ All rulings are the owner's.
 | D11 | The word list, in Settings, checked before misaki's dictionaries; raw phonemes accepted | 2026-10-29 | Seeded with "phonorheos" as `fQnQ ɹˈiːQs`, chosen by ear |
 | D12 | No change to graptostream to ignore phonorheos's speech: spoken names direct its text, so speech heard by a microphone reaches no app unless it begins with a name | 2026-10-29 | |
 | D13 | A handbook document on the Tauri stack and the bundled Python, after the release | 2026-10-29 | |
-| W1 | Weak copyleft (MPL-2.0, LGPL) accepted for components carried unmodified; GPL and AGPL still refused by the build | 2026-10-29 | `LICENSING.md` lists them |
+| L1 | Weak copyleft (MPL-2.0, LGPL) accepted for components carried unmodified; GPL and AGPL still refused by the build | 2026-10-29 | `LICENSING.md` lists them |
 | M1 | An MCP endpoint at `POST /mcp`, served by the app itself with `rmcp` (the official Rust SDK, Apache-2.0), stateless with JSON replies, so that a session speaks by a tool call of a few tokens instead of a shell command; no stdio bridge, as slower | 2026-10-30 | A call reaches the queue in a median 0.23 ms (debug build, pacific) |
 | M2 | On every listener: the socket, `127.0.0.1` and, when switched on, the LAN behind its tokens | 2026-10-30 | |
 | M3 | Two tools only, `say` (returning once queued) and `stop`, since each tool's description is read into every connected session's context | 2026-10-30 | |
