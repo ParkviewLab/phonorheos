@@ -1,0 +1,30 @@
+#!/bin/bash
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Installs Tauri's command-line tool (`cargo tauri`) from Tauri's own prebuilt release,
+# pinned and checked by SHA-256, instead of compiling it on every run (about ten
+# minutes on GitHub's Windows runner). It is a build tool only: nothing of it ships in
+# the installers. To move to a newer release, change VERSION and the three digests,
+# which GitHub lists beside each file of the release.
+set -euo pipefail
+VERSION=2.12.4
+case "$(uname)" in
+  Darwin) FILE=cargo-tauri-aarch64-apple-darwin.zip SHA=f71a34ada728ca2d1a51c28d6d21639e1e080898ec69ec8d49c5da3b7e8bc1be ;;
+  Linux) FILE=cargo-tauri-x86_64-unknown-linux-gnu.tgz SHA=820ae3c7580ca637cad15f65638960ee2a96e5a491e224691c86d6f25e6c9e8a ;;
+  MINGW* | MSYS*) FILE=cargo-tauri-x86_64-pc-windows-msvc.zip SHA=3e8687fb184bd7f10ebd8642f7715f79f4a605c0694c142a21507e8a24dc0f8b ;;
+  *) echo "unsupported system: $(uname)" >&2; exit 1 ;;
+esac
+TMP=$(mktemp -d)
+curl -fsSL --retry 3 -o "$TMP/$FILE" "https://github.com/tauri-apps/tauri/releases/download/tauri-cli-v$VERSION/$FILE"
+echo "$SHA  $TMP/$FILE" | sha256sum -c -
+case "$FILE" in
+  *.zip) unzip -q -o "$TMP/$FILE" -d "$TMP/out" ;;
+  *) mkdir "$TMP/out" && tar -xzf "$TMP/$FILE" -C "$TMP/out" ;;
+esac
+BIN=${CARGO_HOME:-$HOME/.cargo}/bin
+if command -v cygpath > /dev/null; then BIN=$(cygpath -u "$BIN"); fi
+mkdir -p "$BIN"
+cp "$TMP"/out/cargo-tauri* "$BIN/"
+rm -rf "$TMP"
+cargo tauri --version
