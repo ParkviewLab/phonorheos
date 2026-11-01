@@ -22,7 +22,6 @@ ls "$DIR/phonorheos.exe" "$DIR/bin/phonorheos.exe" "$DIR/python/python.exe"
 on_path || { echo "the command's folder is not on the system PATH" >&2; exit 1; }
 echo "starting the app"
 "$DIR/phonorheos.exe" >/dev/null 2>&1 &
-APP_PID=$!
 URL=http://127.0.0.1:35861
 state=""
 # The first start downloads the model and all the voices, about three minutes on a
@@ -45,9 +44,8 @@ echo "the command"
 timeout 30 "$DIR/bin/phonorheos.exe" status
 timeout 120 "$DIR/bin/phonorheos.exe" say "Hello from Windows."
 echo "uninstalling"
-kill "$APP_PID" 2>/dev/null || true
-taskkill //F //IM phonorheos.exe >/dev/null 2>&1 || true
-taskkill //F //IM python.exe >/dev/null 2>&1 || true
+# The app and its helper, as a tree, so that the bundled files are free.
+taskkill //F //T //IM phonorheos.exe >/dev/null 2>&1 || true
 sleep 3
 # _?= runs the uninstaller in place, so that this waits for it.
 run "$(cygpath -w "$DIR/uninstall.exe")" "'/S', '_?=$(cygpath -w "$DIR")'" || { echo "the uninstaller failed" >&2; exit 1; }

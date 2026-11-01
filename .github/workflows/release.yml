@@ -153,7 +153,7 @@ jobs:
             dist/*.deb
             dist/*.AppImage
 
-  # The Windows installer, for x86_64: an MSI, unsigned (docs/why.md says why), checked
+  # The Windows installer, for x86_64: an NSIS setup.exe, unsigned (docs/why.md says why), checked
   # by installing it on the runner and asking the app and the command to answer.
   installers-windows:
     needs: gate
@@ -166,7 +166,7 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
       - name: Tauri
         run: cargo install tauri-cli --version "^2" --locked
-      - name: Build the MSI
+      - name: Build the installer
         run: scripts/build-app
       - name: Install it and check that it answers
         run: scripts/smoke-windows

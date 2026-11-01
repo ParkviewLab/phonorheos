@@ -39,7 +39,12 @@ jobs:
         run: cargo test
 
   helper:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows too: the helper reads its requests in a way only Windows tests fully.
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: helper

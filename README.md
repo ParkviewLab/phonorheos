@@ -30,7 +30,7 @@ It is the companion of [graptostream](https://github.com/ParkviewLab/graptostrea
   or run the AppImage, which needs no installing: `chmod +x` it, then open it.
 - **Windows:** Windows 11 on x86_64. Run `phonorheos-<version>-windows-x64-setup.exe`, which installs phonorheos for every account (it asks for an administrator) and puts the `phonorheos` command on the system path. It is not signed: where Smart App Control is on, Windows refuses to run it, and where it is off, SmartScreen asks first ("More info", then "Run anyway"). The [user manual](docs/user-manual.md#windows) explains why and what to do.
 
-The first time it opens, phonorheos downloads its speech models and its 28 voices from Hugging Face, about 330 MB, and shows the progress in its window; after that it starts and speaks offline. The installers are large (about 240 MB to download on macOS and 390 MB on Linux; about 930 MB once installed) because they carry their own Python with PyTorch, which runs the voice.
+The first time it opens, phonorheos downloads its speech models and its 28 voices from Hugging Face, about 330 MB, and shows the progress in its window; after that it starts and speaks offline. The installers are large (about 240 MB to download on macOS, 390 MB on Linux and 190 MB on Windows; about 930 MB once installed) because they carry their own Python with PyTorch, which runs the voice.
 
 ## Using it
 
