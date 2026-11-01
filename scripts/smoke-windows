@@ -22,9 +22,9 @@ echo "starting the app"
 "$DIR/phonorheos.exe" >/dev/null 2>&1 &
 URL=http://127.0.0.1:35861
 state=""
-# The first start downloads the model and all the voices, which can take several
-# minutes on a runner; the progress is printed every 30 s.
-deadline=$((SECONDS + 900)); next=0
+# The first start downloads the model and all the voices, about three minutes on a
+# runner; the progress is printed every 30 s.
+deadline=$((SECONDS + 600)); next=0
 while [ $SECONDS -lt $deadline ]; do
   body=$(curl -fs --max-time 5 "$URL/status" || true)
   state=$(printf '%s' "$body" | python -c 'import json,sys; print(json.load(sys.stdin)["voice"]["state"])' 2>/dev/null || true)
@@ -33,7 +33,20 @@ while [ $SECONDS -lt $deadline ]; do
   sleep 2
 done
 curl -fs --max-time 10 "$URL/status"; echo
-[ "$state" = ready ] || { echo "the voice did not become ready (last state: ${state:-no answer})" >&2; exit 1; }
+if [ "$state" != ready ]; then
+  echo "the voice did not become ready (last state: ${state:-no answer})" >&2
+  # Whether the helper is working or waiting: its CPU time, a minute apart.
+  for _ in 1 2; do
+    powershell -NoProfile -Command "Get-Process python -ErrorAction SilentlyContinue | Format-Table Id, CPU, WorkingSet64 -AutoSize"
+    sleep 60
+  done
+  # The helper run directly on the same models, without the app; after four minutes
+  # every thread's stack is printed, which shows where it waits.
+  echo "the helper run directly:"
+  printf '{"op":"load"}\n' | HF_HOME="$(cygpath -w "$LOCALAPPDATA")\\phonorheos\\models" \
+    timeout 300 "$DIR/python/python.exe" -I -B -c "import faulthandler, runpy; faulthandler.dump_traceback_later(240, exit=True); runpy.run_module('phonorheos_helper', run_name='__main__')" 2>&1 | cut -c1-300 | tail -n 60 || true
+  exit 1
+fi
 echo "listing the MCP tools"
 curl -fs --max-time 10 "$URL/mcp" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -q '"name":"say"' \
