@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: Tauri CLI check
+
+# Temporary, removed before the pull request: does the prebuilt Tauri CLI install and
+# run on each release runner?
+
+on:
+  push:
+    branches: [fix-prebuilt-tauri-cli]
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - run: time scripts/install-tauri-cli
+      - run: cargo tauri build --help | head -3
