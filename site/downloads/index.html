@@ -8,7 +8,7 @@ SPDX-License-Identifier: CC-BY-4.0
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ParkviewLab · phonorheos download</title>
-<meta name="description" content="phonorheos: a desktop app that speaks the text other apps send it. Download for macOS and Linux.">
+<meta name="description" content="phonorheos: a desktop app that speaks the text other apps send it. Download for macOS, Linux and Windows.">
 <link rel="icon" href="../assets/icon.png">
 <style>
 /* Palette: the ParkviewLab brand (the handbook's brand.md), its tokens verbatim.
@@ -60,13 +60,13 @@ code{font-family:var(--mono); font-size:.88em; background:var(--paper-2); paddin
 .dl-head h2,.section h2{font-family:var(--display); font-weight:400; font-size:15px; letter-spacing:.14em; text-transform:uppercase; margin:0; color:var(--teal-deep);}
 .verbadge{font-family:var(--mono); font-size:14px; font-weight:700; color:var(--card); background:var(--teal-deep); padding:2px 10px; border-radius:4px;}
 .verbadge:empty{display:none;}
-.tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+.tiles{display:grid; grid-template-columns:repeat(2,1fr); gap:12px;}
 .tile{display:block; text-decoration:none; color:var(--ink); background:var(--card); border:1px solid var(--paper-2);
   border-top:5px solid var(--accent); border-radius:8px; padding:12px 14px; transition:transform .09s ease;}
 .tile:hover{transform:translateY(-2px); color:var(--ink);}
 .tile .t-os{font-size:17px; font-weight:650; line-height:1.15;}
 .tile .t-kind{font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:3px;}
-.tile.mac{--accent:var(--blue);} .tile.deb{--accent:var(--red);} .tile.appimage{--accent:var(--yellow);}
+.tile.mac{--accent:var(--blue);} .tile.deb{--accent:var(--red);} .tile.appimage{--accent:var(--yellow);} .tile.win{--accent:var(--teal);}
 .dl-note{font-size:13px; color:var(--muted); margin:12px 0 0;}
 .dl-note a{color:var(--muted);}
 
@@ -75,7 +75,7 @@ code{font-family:var(--mono); font-size:.88em; background:var(--paper-2); paddin
 .trio{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
 .pt h3{font-size:17px; margin:0 0 6px;}
 .pt p{font-size:14px; color:var(--muted); margin:0;}
-.steps{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.steps{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
 .step{background:var(--card); border:1px solid var(--paper-2); border-radius:8px; padding:14px 16px;}
 .step h3{font-size:15px; margin:0 0 6px;}
 .step p{font-size:14px; color:var(--muted); margin:0 0 6px;}
@@ -156,7 +156,7 @@ footer a{color:var(--muted);}
     <div>
       <h1 class="wordmark">phonorheos</h1>
       <p class="say">foh · noh · REE · ohss</p>
-      <p class="lede">A desktop app for macOS and Linux that speaks the text other apps send it. One queue, so that two apps never talk over each other. <span class="muted">The voice is Kokoro, made on your own machine; after the first start it needs no network.</span></p>
+      <p class="lede">A desktop app for macOS, Linux and Windows that speaks the text other apps send it. One queue, so that two apps never talk over each other. <span class="muted">The voice is Kokoro, made on your own machine; after the first start it needs no network.</span></p>
 
       <div class="dl-head">
         <h2>Download</h2>
@@ -173,6 +173,9 @@ footer a{color:var(--muted);}
         </a>
         <a class="tile appimage" id="dl-appimage" href="https://github.com/ParkviewLab/phonorheos/releases/latest">
           <div class="t-os">Linux</div><div class="t-kind">x86_64 · AppImage</div>
+        </a>
+        <a class="tile win" id="dl-win" href="https://github.com/ParkviewLab/phonorheos/releases/latest">
+          <div class="t-os">Windows</div><div class="t-kind">x86_64 · .msi · unsigned</div>
         </a>
       </div>
       <p class="dl-note">Free and open source under AGPL-3.0-or-later; a commercial licence is available. See <a href="https://github.com/ParkviewLab/phonorheos/releases">all releases</a>.</p>
@@ -194,6 +197,7 @@ footer a{color:var(--muted);}
       <div class="step"><h3>macOS 15 or later</h3><p>Open the <code>.dmg</code> and drag phonorheos to Applications. It is signed and notarised.</p></div>
       <div class="step"><h3>Ubuntu 24.04 or later</h3><p>Install the package with <code>sudo apt install ./phonorheos-*.deb</code>; it adds the app and the <code>phonorheos</code> command.</p></div>
       <div class="step"><h3>Other Linux</h3><p>Make the AppImage executable with <code>chmod +x</code> and open it. Nothing is installed.</p></div>
+      <div class="step"><h3>Windows 11</h3><p>Run the <code>.msi</code>; it asks for an administrator and adds the <code>phonorheos</code> command. It is not signed, so Windows warns about it, and where Smart App Control is on it refuses it outright; the <a href="../docs/user-manual.html#windows">manual</a> explains. Not yet tried on a Windows desktop.</p></div>
     </div>
     <p class="dl-note">The first start downloads the voice, about 330 MB, with its progress shown in the window. The app itself is large because it carries its own Python and PyTorch.</p>
   </section>
@@ -227,7 +231,7 @@ footer a{color:var(--muted);}
     return;
   }
   var v=tag.slice(1), base='https://github.com/ParkviewLab/phonorheos/releases/download/'+tag+'/phonorheos-'+v;
-  var files={ 'dl-mac':'-macos-arm64.dmg', 'dl-deb':'-linux-amd64.deb', 'dl-appimage':'-linux-amd64.AppImage' };
+  var files={ 'dl-mac':'-macos-arm64.dmg', 'dl-deb':'-linux-amd64.deb', 'dl-appimage':'-linux-amd64.AppImage', 'dl-win':'-windows-x64.msi' };
   Object.keys(files).forEach(function(id){ var el=document.getElementById(id); if(el) el.href=base+files[id]; });
 })();
 </script>

@@ -50,6 +50,12 @@ Two risks were tried before the app was built on them, on a branch since deleted
 - Through the shell, each answer costs the session a command, its flags, shell quoting and the Bash tool's description, and a permission check; through `curl`, also a URL, a header and a JSON body inside shell quotes. The transports themselves differ by milliseconds: five `status` requests by the command and by `curl` each took under 10 ms.
 - An MCP tool call carries the tool's name and the text, and nothing else.
 
+### Windows (2026-10-31)
+
+- **Signing:** Microsoft's Artifact Signing, the cheapest route, puts the signer's validated city, state and country on the certificate, readable in every signed file, and is open to individuals only in the United States and Canada; a bought certificate carries the locality too. ParkviewLab is a GitHub organisation, not a registered business, so only a person's own identity could sign.
+- **Unsigned apps on Windows 11:** where Smart App Control is on, an unsigned app is blocked with no way to allow it alone; a person who tried an unsigned build of another app on Windows 11 could not run it. Where Smart App Control is off, SmartScreen's warning offers "More info", then "Run anyway".
+- **The bundled Python on Windows** (GitHub's `windows-latest` runner): `uv sync` from the helper's lock file installed it in 15 s, 897 MB, with no espeak-ng; the helper downloaded the voice and made speech for one sentence, a clock time included, in 41 s.
+
 ## Decisions
 
 All rulings are the owner's.
@@ -76,4 +82,9 @@ All rulings are the owner's.
 | M4 | Sessions on the owner's machines connected at user scope, with both tools allowed without a prompt | 2026-10-30 | |
 | K1 | Speech kept for later only when a client asks: `POST /speak` gains `cache` (keep the speech; false by default) and `speak` (play it now; true by default), so that an app such as Peabody prepares its short holding phrases unheard and plays them at once when they are wanted; a request with both false is refused | 2026-10-31 | No endpoint of its own; the options are on `/speak`, the MCP `say` tool and the command (`--cache`, `--silent`) |
 | K2 | The kept speech in memory only, keyed by the exact text, voice, speed and cutting, limited to 32 MB with the least recently used dropped first; a client that needs a phrase after a restart sends it with `cache` again, and it is made and kept once more | 2026-10-31 | Emptied when the word list changes |
+| W0 | Windows builds unsigned, since signing would publish the owner's locality and there is no business to sign as; the manual says what Smart App Control and SmartScreen then do | 2026-10-31 | Signing returns only if a business is registered |
+| W1 | An MSI (Tauri's WiX bundle), installed for every account into `C:\Program Files\phonorheos`, which needs an administrator | 2026-10-31 | No per-user installer |
+| W2 | The command reaches the app on Windows over `127.0.0.1:35861`, the existing loopback listener; the Unix socket stays on macOS and Linux | 2026-10-31 | No named pipe |
+| W3 | The MSI puts the command's folder on the system path and takes it off on uninstall | 2026-10-31 | The command is its own console program in `bin\`, since the app's `phonorheos.exe` is a windowed program, which a terminal neither waits for nor shows the output of |
+| W4 | Checked in CI only: a Windows leg of the tests on every pull request, and on every release the MSI installed on a Windows runner, which must answer `/status`, load the voice, list `say` at `/mcp` and take the command | 2026-10-31 | No Windows machine is at hand; a desktop trial comes later and does not hold a release |
 | C1 | Cutting text at ", ", ". " and line breaks, so that the first piece is short, kept as a setting, off by default, with a per-request `by_clause` and the command's `--by-clause` and `--whole` | 2026-10-29 | The pauses between pieces make it a choice, not a default |
