@@ -175,7 +175,7 @@ jobs:
         with:
           name: installers-windows
           if-no-files-found: error
-          path: dist/*.msi
+          path: dist/*-setup.exe
 
   changelog:
     needs: [gate, installers-macos, installers-linux, installers-windows]

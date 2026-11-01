@@ -2,24 +2,27 @@
 # SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# Checks the Windows installer on a CI runner (Git Bash): the MSI in dist/ installs
-# silently, the command's folder is on the system PATH, the app starts, answers
-# /status, loads its voice, lists `say` at /mcp, and the command reaches it. The
-# runner has no speakers, so what is heard is not checked.
+# Checks the Windows installer on a CI runner (Git Bash): the setup.exe in dist/
+# installs silently, the command's folder is on the system PATH, the app starts,
+# answers /status, loads its voice, lists `say` at /mcp, and the command reaches it;
+# then the uninstaller takes the folder off the PATH. The runner has no speakers, so
+# what is heard is not checked.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-MSI=$(ls dist/*.msi)
-echo "installing $MSI"
-# Through PowerShell, since Git Bash rewrites msiexec's switches, and a malformed one
-# opens msiexec's usage window, which waits for a click that never comes on a runner.
-timeout 600 powershell -NoProfile -Command "\$p = Start-Process msiexec.exe -Wait -PassThru -ArgumentList '/i', '\"$(cygpath -w "$MSI")\"', '/qn', '/l*v', 'install.log'; exit \$p.ExitCode" \
-  || { echo "msiexec failed" >&2; tail -n 40 install.log 2>/dev/null; exit 1; }
+SETUP=$(ls dist/*-setup.exe)
+# Through PowerShell, since Git Bash rewrites a switch such as /S into a path.
+run() { timeout 600 powershell -NoProfile -Command "\$p = Start-Process -Wait -PassThru -FilePath '$1' -ArgumentList $2; exit \$p.ExitCode"; }
+on_path() {
+  reg query 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' //v Path | grep -qi 'phonorheos\\bin'
+}
+echo "installing $SETUP"
+run "$(cygpath -w "$SETUP")" "'/S'" || { echo "the installer failed" >&2; exit 1; }
 DIR="/c/Program Files/phonorheos"
 ls "$DIR/phonorheos.exe" "$DIR/bin/phonorheos.exe" "$DIR/python/python.exe"
-reg query 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' //v Path \
-  | grep -qi 'phonorheos\\bin' || { echo "the command's folder is not on the system PATH" >&2; exit 1; }
+on_path || { echo "the command's folder is not on the system PATH" >&2; exit 1; }
 echo "starting the app"
 "$DIR/phonorheos.exe" >/dev/null 2>&1 &
+APP_PID=$!
 URL=http://127.0.0.1:35861
 state=""
 # The first start downloads the model and all the voices, about three minutes on a
@@ -41,4 +44,12 @@ curl -fs --max-time 10 "$URL/mcp" -H 'Content-Type: application/json' -H 'Accept
 echo "the command"
 timeout 30 "$DIR/bin/phonorheos.exe" status
 timeout 120 "$DIR/bin/phonorheos.exe" say "Hello from Windows."
+echo "uninstalling"
+kill "$APP_PID" 2>/dev/null || true
+taskkill //F //IM phonorheos.exe >/dev/null 2>&1 || true
+taskkill //F //IM python.exe >/dev/null 2>&1 || true
+sleep 3
+# _?= runs the uninstaller in place, so that this waits for it.
+run "$(cygpath -w "$DIR/uninstall.exe")" "'/S', '_?=$(cygpath -w "$DIR")'" || { echo "the uninstaller failed" >&2; exit 1; }
+! on_path || { echo "the uninstaller left the command's folder on the system PATH" >&2; exit 1; }
 echo "the Windows installer works"

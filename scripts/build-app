@@ -4,9 +4,9 @@
 #
 # Builds the installers into dist/: on macOS the app in a disk image
 # (phonorheos-<version>-macos-arm64.dmg), on Linux a .deb and an AppImage
-# (phonorheos-<version>-linux-amd64.*), on Windows (Git Bash) an MSI
-# (phonorheos-<version>-windows-x64.msi), unsigned, with the command as a console
-# program in bin\, which the MSI puts on the PATH. The bundled Python is prepared first
+# (phonorheos-<version>-linux-amd64.*), on Windows (Git Bash) an NSIS
+# installer (phonorheos-<version>-windows-x64-setup.exe), unsigned, with the command as
+# a console program in bin\, which the installer puts on the PATH. The bundled Python is prepared first
 # (scripts/prepare-python) and the third-party notices generated. Signing on macOS:
 # SIGN_IDENTITY (CI sets the Developer ID identity), else the bundle is signed ad hoc.
 set -e
@@ -19,7 +19,7 @@ scripts/prepare-python
 case "$(uname)" in
   Darwin) TARGET=aarch64-apple-darwin; OS=macos-arm64; BUNDLES=app,dmg ;;
   Linux) TARGET=x86_64-unknown-linux-gnu; OS=linux-amd64; BUNDLES=deb,appimage ;;
-  MINGW* | MSYS*) TARGET=x86_64-pc-windows-msvc; OS=windows-x64; BUNDLES=msi ;;
+  MINGW* | MSYS*) TARGET=x86_64-pc-windows-msvc; OS=windows-x64; BUNDLES=nsis ;;
   *) echo "unsupported system: $(uname)" >&2; exit 1 ;;
 esac
 RESOURCES='"python/":"python/","THIRD-PARTY-NOTICES.txt":"THIRD-PARTY-NOTICES.txt"'
@@ -53,6 +53,6 @@ case "$OS" in
   linux-amd64)
     cp "$B"/deb/*.deb "dist/phonorheos-$VERSION-$OS.deb"
     cp "$B"/appimage/*.AppImage "dist/phonorheos-$VERSION-$OS.AppImage" ;;
-  windows-x64) cp "$B"/msi/*.msi "dist/phonorheos-$VERSION-$OS.msi" ;;
+  windows-x64) cp "$B"/nsis/*-setup.exe "dist/phonorheos-$VERSION-$OS-setup.exe" ;;
 esac
 ls -l dist

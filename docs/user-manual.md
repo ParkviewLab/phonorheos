@@ -25,7 +25,7 @@ The Linux build makes speech on the processor, not on a graphics card.
 
 phonorheos is built for Windows 11 on x86_64. It has not yet been tried on a Windows desktop; it is checked only by installing it on a test machine without speakers.
 
-1. Download `phonorheos-<version>-windows-x64.msi`.
+1. Download `phonorheos-<version>-windows-x64-setup.exe`.
 2. Run it. It installs phonorheos for every account on the machine, into `C:\Program Files\phonorheos`, so Windows asks for an administrator. It adds phonorheos to the Start menu and the `phonorheos` command to the system path, for terminals opened afterwards.
 3. Open phonorheos from the Start menu.
 

@@ -175,7 +175,7 @@ footer a{color:var(--muted);}
           <div class="t-os">Linux</div><div class="t-kind">x86_64 · AppImage</div>
         </a>
         <a class="tile win" id="dl-win" href="https://github.com/ParkviewLab/phonorheos/releases/latest">
-          <div class="t-os">Windows</div><div class="t-kind">x86_64 · .msi · unsigned</div>
+          <div class="t-os">Windows</div><div class="t-kind">x86_64 · setup.exe · unsigned</div>
         </a>
       </div>
       <p class="dl-note">Free and open source under AGPL-3.0-or-later; a commercial licence is available. See <a href="https://github.com/ParkviewLab/phonorheos/releases">all releases</a>.</p>
@@ -197,7 +197,7 @@ footer a{color:var(--muted);}
       <div class="step"><h3>macOS 15 or later</h3><p>Open the <code>.dmg</code> and drag phonorheos to Applications. It is signed and notarised.</p></div>
       <div class="step"><h3>Ubuntu 24.04 or later</h3><p>Install the package with <code>sudo apt install ./phonorheos-*.deb</code>; it adds the app and the <code>phonorheos</code> command.</p></div>
       <div class="step"><h3>Other Linux</h3><p>Make the AppImage executable with <code>chmod +x</code> and open it. Nothing is installed.</p></div>
-      <div class="step"><h3>Windows 11</h3><p>Run the <code>.msi</code>; it asks for an administrator and adds the <code>phonorheos</code> command. It is not signed, so Windows warns about it, and where Smart App Control is on it refuses it outright; the <a href="../docs/user-manual.html#windows">manual</a> explains. Not yet tried on a Windows desktop.</p></div>
+      <div class="step"><h3>Windows 11</h3><p>Run the <code>setup.exe</code>; it asks for an administrator and adds the <code>phonorheos</code> command. It is not signed, so Windows warns about it, and where Smart App Control is on it refuses it outright; the <a href="../docs/user-manual.html#windows">manual</a> explains. Not yet tried on a Windows desktop.</p></div>
     </div>
     <p class="dl-note">The first start downloads the voice, about 330 MB, with its progress shown in the window. The app itself is large because it carries its own Python and PyTorch.</p>
   </section>
@@ -231,7 +231,7 @@ footer a{color:var(--muted);}
     return;
   }
   var v=tag.slice(1), base='https://github.com/ParkviewLab/phonorheos/releases/download/'+tag+'/phonorheos-'+v;
-  var files={ 'dl-mac':'-macos-arm64.dmg', 'dl-deb':'-linux-amd64.deb', 'dl-appimage':'-linux-amd64.AppImage', 'dl-win':'-windows-x64.msi' };
+  var files={ 'dl-mac':'-macos-arm64.dmg', 'dl-deb':'-linux-amd64.deb', 'dl-appimage':'-linux-amd64.AppImage', 'dl-win':'-windows-x64-setup.exe' };
   Object.keys(files).forEach(function(id){ var el=document.getElementById(id); if(el) el.href=base+files[id]; });
 })();
 </script>
