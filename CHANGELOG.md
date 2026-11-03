@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.5.0] - 2026-11-03
+
+### Highlights
+
+Temperatures and unit abbreviations are now spoken as words before synthesis, so text like "59°F (15°C)" and "4 mph" is read as "fifty-nine degrees Fahrenheit (fifteen degrees Celsius)" and "four miles per hour" instead of producing nonsense. The pre-pass covers degree signs with or without F or C, a leading minus sign, and the units mph, km/h, kph, m/s, km, cm, mm, kg, lb, lbs, ft and hPa following a number, using the singular form for exactly 1. Units are expanded in British spelling, and a hyphenated range such as "10-15" is still read as two separate numbers.
+
+### Features
+
+- Say degree signs and unit abbreviations as words (#29)
+
 ## [v0.4.0] - 2026-11-01
 
 ### Highlights
