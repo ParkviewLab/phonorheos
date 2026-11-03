@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.6.0] - 2026-11-03
+
+### Highlights
+
+Numeric ranges written with an en or em dash between unspaced numbers, such as "72–76°F" or "1.5–2.5 kg", are now spoken as "72 to 76", including decimals, thousands groups and negative numbers, with unit and degree expansion still applied to the second number. Dashes that are more likely to be arithmetic or dates — ASCII hyphens, minus signs, spaced dashes, chains like "2026–11–03", and expressions followed by an equals sign — are left as they were, with one exception: a hyphen range followed by a degree sign or unit abbreviation, such as "10-15°C" or "10-15 mph", is also read as a range, because it was previously garbled.
+
+### Features
+
+- Say a dash between numbers as 'to' (#31)
+
 ## [v0.5.0] - 2026-11-03
 
 ### Highlights
