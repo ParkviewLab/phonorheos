@@ -247,18 +247,37 @@ jobs:
           git commit -m "docs(changelog): $TAG [skip ci]"
           git push origin HEAD:main
 
+      # A difference from the handbook's changelog part, declared in .assembly.toml: the part makes
+      # the Release with one `gh release create` call, and GitHub's API answers an occasional 502
+      # (it did for v0.7.0, whose Release was left a draft with no installers). Here the Release is
+      # made in three steps, each repeated on failure and each safe to run again whatever an
+      # earlier attempt left: a draft with the notes, the installers one by one, then publication.
+      # A re-run of a failed job therefore completes the Release instead of failing on it.
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
+          retry() {
+            local attempt
+            for attempt in 1 2 3 4 5; do
+              "$@" && return 0
+              echo "::warning::attempt $attempt of '$*' failed"
+              sleep $((attempt * 20))
+            done
+            return 1
+          }
+          ensure_draft() {
+            gh release view "$TAG" > /dev/null 2>&1 \
+              || gh release create "$TAG" --draft --title "$TAG" --notes-file release-body.md --target main
+          }
           shopt -s globstar nullglob
           files=()                                  # regular files only — the
           for f in artifacts/**/*; do               # per-OS dirs are not assets
             [[ -f "$f" ]] && files+=("$f")
           done
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --notes-file release-body.md \
-            --target main \
-            "${files[@]}"
+          retry ensure_draft
+          for f in "${files[@]}"; do
+            retry gh release upload "$TAG" --clobber "$f"
+          done
+          retry gh release edit "$TAG" --draft=false

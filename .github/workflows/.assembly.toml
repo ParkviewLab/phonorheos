@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# What this repository publishes, and where it differs from the handbook's
+# release parts (dev-tools' assemble-workflows --check; see the handbook's
+# ci.md, "`release.yml`: on `v*` tag push").
+targets = ["installers"]
+dev = false
+header = """# SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+"""
+
+# The Release is made in three repeatable steps (a draft with the notes, the
+# installers one by one, then publication), each retried on failure, because the
+# part's single `gh release create` call left v0.7.0 as an empty draft when
+# GitHub's API answered 502. Documented in the comment at the step in release.yml.
+[[slots]]
+job = "changelog"
+reason = "the Release is made in repeatable, retried steps; see the comment at the step in release.yml"
