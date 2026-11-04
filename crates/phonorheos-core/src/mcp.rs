@@ -44,7 +44,7 @@ pub struct Phonorheos {
 #[tool_router]
 impl Phonorheos {
     #[tool(
-        description = "Speak text aloud, or with speak false and cache true prepare it unheard. Returns once it is queued."
+        description = "Speak text aloud, or with speak false and cache true prepare it unheard. Returns once it is queued, with muted true if the owner has muted phonorheos, in which case the text is skipped, not spoken."
     )]
     fn say(
         &self,
@@ -68,7 +68,8 @@ impl Phonorheos {
             Ok(r) => {
                 let accepted = self.core.speak(r);
                 CallToolResult::success(vec![ContentBlock::text(
-                    json!({ "id": accepted.id, "ahead": accepted.ahead }).to_string(),
+                    json!({ "id": accepted.id, "ahead": accepted.ahead, "muted": accepted.muted })
+                        .to_string(),
                 )])
             }
             Err((_, why)) => CallToolResult::error(vec![ContentBlock::text(why)]),

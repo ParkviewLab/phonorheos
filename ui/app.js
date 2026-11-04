@@ -49,6 +49,7 @@ function stateLine(s) {
   if (v.state === "starting") return ["busy", "Starting the voice…"];
   if (v.state === "failed") return ["failed", `The voice stopped: ${v.detail || "unknown"}. Restarting…`];
   if (speaking && speaking.speak === false) return ["busy", `Preparing speech to keep for ${speaking.client}`];
+  if (s.muted) return ["muted", "Muted"];
   if (speaking) return ["busy", `Speaking for ${speaking.client}`];
   return ["ready", "Ready"];
 }
@@ -58,6 +59,9 @@ function draw(s) {
   const [cls, line] = stateLine(s);
   $("dot").className = `dot ${cls}`;
   $("state").textContent = line;
+  $("mute").textContent = s.muted ? "Unmute" : "Mute";
+  $("mute").classList.toggle("on", s.muted);
+  $("header-version").textContent = s.version;
 
   const voice = $("voice");
   if (!voice.options.length) for (const v of s.voices) voice.append(el("option", { value: v }, v));
@@ -123,6 +127,7 @@ $("toggle-settings").onclick = () => {
   $("toggle-settings").textContent = open ? "Done" : "Settings";
 };
 $("stop").onclick = () => invoke("stop");
+$("mute").onclick = () => invoke("set_muted", { on: !current.muted }).then(refresh).catch(showError);
 const setDefaults = () => invoke("set_defaults", { voice: $("voice").value, speed: Number($("speed").value), byClause: $("by-clause").checked }).then(refresh).catch(showError);
 $("voice").onchange = setDefaults;
 $("speed").onchange = setDefaults;

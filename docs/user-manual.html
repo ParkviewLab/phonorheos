@@ -355,10 +355,10 @@ footer.site {
     <p class="prose">From top to bottom, the window shows:</p>
 
     <div class="window" role="list">
-      <div class="bar"><span class="dir">phonorheos</span><span class="btn">Stop</span></div>
+      <div class="bar"><span class="dir">phonorheos <small>icon, name, version</small></span><span class="btn">Mute</span><span class="btn">Stop</span></div>
       <div class="pane" role="listitem">
         <span class="n">1</span><span class="name">The state line</span>
-        <span class="what">ready; speaking, and for which client; downloading the voice; or, if the voice stopped, why. A stopped voice is started again on its own.</span>
+        <span class="what">ready; muted; speaking, and for which client; downloading the voice; or, if the voice stopped, why. A stopped voice is started again on its own.</span>
       </div>
       <div class="pane" role="listitem">
         <span class="n">2</span><span class="name">Voice</span>
@@ -366,7 +366,7 @@ footer.site {
       </div>
       <div class="pane" role="listitem">
         <span class="n">3</span><span class="name">Queue</span>
-        <span class="what">what is being spoken and what waits. <span class="btnword">Withdraw</span> removes one item; <span class="btnword">Stop</span>, at the top of the window, silences everything at once.</span>
+        <span class="what">what is being spoken and what waits. <span class="btnword">Withdraw</span> removes one item; <span class="btnword">Stop</span>, at the top of the window, silences everything at once. <span class="btnword">Mute</span>, to the left of Stop, silences speech without clearing the queue: while it is on (the button then reads <span class="btnword">Unmute</span>), speech that would be played is skipped, not held, and the list of recent speech marks it "muted"; speech made only to be kept is still made. Only this button changes it, never another app, and phonorheos starts unmuted. Apps are told: <code>phonorheos status</code>, <code>GET /status</code> and the result of a request to speak carry <code>muted</code>.</span>
       </div>
       <div class="pane" role="listitem">
         <span class="n">4</span><span class="name">Clients</span>
@@ -510,7 +510,7 @@ footer.site {
           <tr><td><code>phonorheos say --cache "…"</code></td><td>Speaks the text and keeps its speech, so that it plays at once next time (see <a href="#kept">Phrases that play at once</a>).</td></tr>
           <tr><td><code>phonorheos say --cache --silent "…"</code></td><td>Makes and keeps the speech without playing it.</td></tr>
           <tr><td><code>phonorheos stop</code></td><td>Silences everything.</td></tr>
-          <tr><td><code>phonorheos status</code></td><td>Prints the version, the voice's state, what is being spoken and how many items wait.</td></tr>
+          <tr><td><code>phonorheos status</code></td><td>Prints the version, the voice's state, what is being spoken, how many items wait and whether it is muted.</td></tr>
         </tbody>
       </table>
     </div>
@@ -524,7 +524,7 @@ footer.site {
     <h2>From Claude Code and other MCP clients</h2>
     <p class="prose">phonorheos is also a Model Context Protocol server, at <code>http://127.0.0.1:35861/mcp</code>, so that an AI assistant can speak with a tool rather than a command. Register it once in Claude Code:</p>
 <pre><code>claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp</code></pre>
-    <p class="prose">A session started afterwards has two tools: <code>say</code>, which speaks text (optionally in another voice or at another speed, and with the <code>speak</code> and <code>cache</code> choices described under <a href="#kept">Phrases that play at once</a>) and returns as soon as it is queued, and <code>stop</code>, which silences everything. phonorheos must be running when the session starts. From another machine, use <code>http://&lt;this-machine&gt;.local:35861/mcp</code> with the network switched on and a token, given to the client as an <code>Authorization: Bearer &lt;token&gt;</code> header (in Claude Code, <code>--header "Authorization: Bearer &lt;token&gt;"</code>).</p>
+    <p class="prose">A session started afterwards has two tools: <code>say</code>, which speaks text (optionally in another voice or at another speed, and with the <code>speak</code> and <code>cache</code> choices described under <a href="#kept">Phrases that play at once</a>) and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it), and <code>stop</code>, which silences everything. phonorheos must be running when the session starts. From another machine, use <code>http://&lt;this-machine&gt;.local:35861/mcp</code> with the network switched on and a token, given to the client as an <code>Authorization: Bearer &lt;token&gt;</code> header (in Claude Code, <code>--header "Authorization: Bearer &lt;token&gt;"</code>).</p>
   </section>
 
   <!-- ===================================================== LOGIN -->

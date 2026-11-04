@@ -11,7 +11,7 @@ use crate::events::{Draft, Event, EventHub, Kind};
 use crate::queue::{Item, ItemView, Queue, Withdrawn};
 use serde::Serialize;
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, RwLock};
 use tokio::sync::{Notify, broadcast, watch};
 
@@ -22,6 +22,8 @@ pub enum Control {
     Cancel(String),
     /// Stop speaking this item, as part of a stop of everything.
     Stop(String),
+    /// Stop speaking this item, because the owner muted.
+    Mute(String),
 }
 
 /// How an item ended.
@@ -29,6 +31,8 @@ pub enum Control {
 pub enum Outcome {
     Finished,
     Cancelled,
+    /// Not played, or silenced part-way, because the owner muted.
+    Muted,
     Failed(String),
 }
 
@@ -88,6 +92,9 @@ pub struct Accepted {
     pub event: u64,
     /// How many items are ahead of it.
     pub ahead: usize,
+    /// Whether the app was muted when the request was accepted: if so, an item to be
+    /// played is skipped, and ends as `cancelled` with the reason `muted`.
+    pub muted: bool,
 }
 
 pub struct Core {
@@ -101,6 +108,8 @@ pub struct Core {
     voice: Mutex<VoiceStatus>,
     cache: Mutex<Cache>,
     changed: watch::Sender<u64>,
+    /// Set only by the app's window; clients are told of it and cannot change it.
+    muted: AtomicBool,
 }
 
 impl Default for Core {
@@ -122,6 +131,7 @@ impl Core {
             voice: Mutex::default(),
             cache: Mutex::default(),
             changed: watch::channel(0).0,
+            muted: AtomicBool::new(false),
         }
     }
 
@@ -162,6 +172,7 @@ impl Core {
             id: item.id,
             event: event.id,
             ahead,
+            muted: self.muted(),
         }
     }
 
@@ -212,6 +223,26 @@ impl Core {
         removed.len() + usize::from(speaking.is_some())
     }
 
+    /// Whether the app is muted: items to be played are skipped, not held.
+    pub fn muted(&self) -> bool {
+        self.muted.load(Ordering::SeqCst)
+    }
+
+    /// Mutes or unmutes. Only the app's window calls this. Muting silences the item
+    /// being played, if any; unmuting changes nothing already skipped.
+    pub fn set_muted(&self, on: bool) {
+        if self.muted.swap(on, Ordering::SeqCst) == on {
+            return;
+        }
+        if on {
+            let speaking = self.queue.lock().expect("queue lock").speaking().cloned();
+            if let Some(item) = speaking.filter(|i| i.speak) {
+                let _ = self.control.send(Control::Mute(item.id));
+            }
+        }
+        self.touch();
+    }
+
     /// Waits for the next item to speak, which then counts as speaking.
     pub async fn next(&self) -> Item {
         loop {
@@ -251,6 +282,7 @@ impl Core {
                 Some("stopped while speaking".into()),
                 false,
             ),
+            Outcome::Muted => self.publish(Kind::Cancelled, item, Some("muted".into()), false),
             Outcome::Failed(why) => self.publish(Kind::Failed, item, Some(why), false),
         };
         self.wake.notify_one();
@@ -469,6 +501,62 @@ mod tests {
         core.finished(&item, Outcome::Cancelled);
         let after: Vec<Kind> = kinds(&core, 3);
         assert_eq!(after, [Kind::Cancelled, Kind::Cancelled, Kind::Cancelled]);
+    }
+
+    #[tokio::test]
+    async fn muting_silences_the_item_speaking_and_is_told_to_the_window() {
+        let core = Core::with_hub(EventHub::starting_at(1));
+        let mut control = core.control();
+        let changes = core.changes();
+        core.speak(request("a"));
+        let item = core.next().await;
+        assert!(!core.muted());
+        core.set_muted(true);
+        assert!(core.muted());
+        assert!(changes.has_changed().unwrap());
+        assert_eq!(
+            control.recv().await.unwrap(),
+            Control::Mute(item.id.clone())
+        );
+        core.finished(&item, Outcome::Muted);
+        let events = core.events().subscribe(Some(0)).0;
+        let last = events.last().unwrap();
+        assert_eq!(last.kind, Kind::Cancelled);
+        assert_eq!(last.reason.as_deref(), Some("muted"));
+    }
+
+    #[tokio::test]
+    async fn muting_leaves_an_item_made_unheard_and_an_unchanged_state_alone() {
+        let core = Core::default();
+        let mut control = core.control();
+        core.speak(Request {
+            speak: false,
+            cache: true,
+            ..request("kept")
+        });
+        let _item = core.next().await;
+        core.set_muted(true);
+        assert!(
+            control.try_recv().is_err(),
+            "an item not to be played is not muted"
+        );
+        let mut changes = core.changes();
+        changes.mark_unchanged();
+        core.set_muted(true);
+        assert!(
+            !changes.has_changed().unwrap(),
+            "muting again changes nothing"
+        );
+    }
+
+    #[test]
+    fn a_request_is_told_whether_it_was_made_while_muted() {
+        let core = Core::default();
+        assert!(!core.speak(request("one")).muted);
+        core.set_muted(true);
+        assert!(core.speak(request("two")).muted);
+        core.set_muted(false);
+        assert!(!core.speak(request("three")).muted);
     }
 
     #[test]

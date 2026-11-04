@@ -124,6 +124,25 @@ async fn withdrawing_and_stopping() {
 }
 
 #[tokio::test]
+async fn status_and_speak_tell_whether_the_app_is_muted_and_no_route_changes_it() {
+    let c = core();
+    let (_, status) = send(&c, get("/status")).await;
+    assert_eq!(status["muted"], false);
+    let (_, spoken) = send(&c, post("/speak", json!({"text": "a"}))).await;
+    assert_eq!(spoken["muted"], false);
+    c.set_muted(true);
+    let (_, status) = send(&c, get("/status")).await;
+    assert_eq!(status["muted"], true);
+    let (_, spoken) = send(&c, post("/speak", json!({"text": "b"}))).await;
+    assert_eq!(spoken["muted"], true);
+    for path in ["/mute", "/unmute"] {
+        let (code, _) = send(&c, post(path, json!({"muted": false}))).await;
+        assert_eq!(code, StatusCode::NOT_FOUND, "{path}");
+    }
+    assert!(c.muted(), "nothing a client sends unmutes");
+}
+
+#[tokio::test]
 async fn a_web_page_and_a_foreign_host_are_refused() {
     let c = core();
     let page = Request::post("/speak")

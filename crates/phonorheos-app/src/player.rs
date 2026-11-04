@@ -6,6 +6,7 @@
 //! end once the device has played the last of it. An item whose speech is cached is
 //! played from the cache without asking the helper; an item marked `cache` has its
 //! speech kept once made; an item not to be spoken is made and kept, but not played.
+//! Whilst the app is muted an item to be played is skipped, not held, and ends muted.
 
 use crate::audio::Output;
 use crate::helper::{Helper, Said};
@@ -39,18 +40,27 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
         let speed = item.speed.unwrap_or(d.speed);
         let by_clause = item.by_clause.unwrap_or(d.by_clause);
         let key = Key::new(&item.text, &voice, speed, by_clause);
+        // While muted an item to be played is skipped, not held; one not to be played
+        // (speech made to keep) is made as before.
+        let muted = item.speak && core.muted();
+        let play = item.speak && !muted;
         let outcome = if let Some(chunks) = core.cached(&key) {
-            if item.speak {
+            if play {
                 for pcm in chunks.iter() {
                     output.push(pcm);
                 }
                 core.started(&item);
                 drain(&output, &item, &mut control).await
+            } else if muted {
+                Outcome::Muted
             } else {
                 Outcome::Finished
             }
+        } else if muted && !item.cache {
+            // Speech that would be neither heard nor kept is not made.
+            Outcome::Muted
         } else {
-            speak(
+            let outcome = speak(
                 &core,
                 &helper,
                 &output,
@@ -58,11 +68,17 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
                 &voice,
                 speed,
                 by_clause,
+                play,
                 &mut said,
                 &mut control,
                 key,
             )
-            .await
+            .await;
+            if muted && outcome == Outcome::Finished {
+                Outcome::Muted
+            } else {
+                outcome
+            }
         };
         core.finished(&item, outcome);
     }
@@ -72,7 +88,15 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
 /// unread because it came as that item ended, is not.
 fn is_for(c: &Control, item: &Item) -> bool {
     match c {
-        Control::Stop(id) | Control::Cancel(id) => *id == item.id,
+        Control::Stop(id) | Control::Cancel(id) | Control::Mute(id) => *id == item.id,
+    }
+}
+
+/// How an item ends on a control meant for it.
+fn ended_by(c: &Control) -> Outcome {
+    match c {
+        Control::Mute(_) => Outcome::Muted,
+        Control::Stop(_) | Control::Cancel(_) => Outcome::Cancelled,
     }
 }
 
@@ -85,6 +109,7 @@ async fn speak(
     voice: &str,
     speed: f32,
     by_clause: bool,
+    play: bool,
     said: &mut tokio::sync::broadcast::Receiver<Said>,
     control: &mut tokio::sync::broadcast::Receiver<Control>,
     key: Key,
@@ -100,7 +125,7 @@ async fn speak(
         tokio::select! {
             msg = said.recv() => match msg {
                 Ok(Said::Audio(id, pcm)) if id == item.id => {
-                    if item.speak {
+                    if play {
                         output.push(&pcm);
                         if !started {
                             started = true;
@@ -117,17 +142,17 @@ async fn speak(
                 Ok(_) | Err(RecvError::Lagged(_)) => {}
                 Err(RecvError::Closed) => return Outcome::Failed("the voice is gone".into()),
             },
-            c = control.recv() => if c.as_ref().is_ok_and(|c| is_for(c, item)) {
+            c = control.recv() => if let Some(c) = c.ok().filter(|c| is_for(c, item)) {
                 helper.cancel(&item.id);
-                if item.speak {
+                if play {
                     output.clear();
                 }
-                return Outcome::Cancelled;
+                return ended_by(&c);
             },
         }
     }
     if let Some(why) = failure {
-        if item.speak {
+        if play {
             output.clear();
         }
         return Outcome::Failed(why);
@@ -135,7 +160,7 @@ async fn speak(
     if item.cache {
         core.keep(key, kept, generation);
     }
-    if !item.speak {
+    if !play {
         return Outcome::Finished;
     }
     drain(output, item, control).await
@@ -152,9 +177,9 @@ async fn drain(
             _ = tokio::time::sleep(Duration::from_millis(20)) => if output.is_drained() || !output.is_open() {
                 return Outcome::Finished;
             },
-            c = control.recv() => if c.as_ref().is_ok_and(|c| is_for(c, item)) {
+            c = control.recv() => if let Some(c) = c.ok().filter(|c| is_for(c, item)) {
                 output.clear();
-                return Outcome::Cancelled;
+                return ended_by(&c);
             },
         }
     }

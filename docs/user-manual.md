@@ -44,9 +44,10 @@ The first time it opens, phonorheos downloads its speech model and its 28 voices
 
 From top to bottom, the window shows:
 
-- **The state line:** ready; speaking, and for which client; downloading the voice; or, if the voice stopped, why. A stopped voice is started again on its own.
+- **The header:** the app's icon, its name and version, the state line (next), and the buttons **Mute**, **Stop** and **Settings**.
+- **The state line:** ready; muted; speaking, and for which client; downloading the voice; or, if the voice stopped, why. A stopped voice is started again on its own.
 - **Voice:** the voice and speed used for text that names none, the clause setting (below), and a line where you can type something and press **Say it** to hear it.
-- **Queue:** what is being spoken and what waits. **Withdraw** removes one item; **Stop**, at the top of the window, silences everything at once.
+- **Queue:** what is being spoken and what waits. **Withdraw** removes one item; **Stop**, at the top of the window, silences everything at once. **Mute**, to the left of Stop, silences speech without clearing the queue: while it is on (the button then reads **Unmute**), speech that would be played is skipped, not held, and the list of recent speech marks it "muted"; speech made only to be kept is still made. Only this button changes it, never another app, and phonorheos starts unmuted. Apps are told: `phonorheos status`, `GET /status` and the result of a request to speak carry `muted`.
 - **Clients:** the apps reading phonorheos's event stream.
 - **Recently spoken:** the last 50 pieces of text, with who sent each, and whether it was cancelled or failed.
 
@@ -117,7 +118,7 @@ The `phonorheos` command talks to the running app and opens no window:
 | `phonorheos say --cache "…"` | Speaks the text and keeps its speech, so that it plays at once next time (see "Phrases that play at once"). |
 | `phonorheos say --cache --silent "…"` | Makes and keeps the speech without playing it. |
 | `phonorheos stop` | Silences everything. |
-| `phonorheos status` | Prints the version, the voice's state, what is being spoken and how many items wait. |
+| `phonorheos status` | Prints the version, the voice's state, what is being spoken, how many items wait and whether it is muted. |
 
 On Linux the package puts the command on your path, and on Windows the installer does, for terminals opened after it. On macOS the command is the app itself; put it on your path once, with your password:
 
@@ -133,7 +134,7 @@ phonorheos is also a Model Context Protocol server, at `http://127.0.0.1:35861/m
 claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp
 ```
 
-A session started afterwards has two tools: `say`, which speaks text (optionally in another voice or at another speed, and with the `speak` and `cache` choices described under "Phrases that play at once") and returns as soon as it is queued, and `stop`, which silences everything. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
+A session started afterwards has two tools: `say`, which speaks text (optionally in another voice or at another speed, and with the `speak` and `cache` choices described under "Phrases that play at once") and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it), and `stop`, which silences everything. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
 
 ## Starting at login
 
