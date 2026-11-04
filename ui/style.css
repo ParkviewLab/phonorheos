@@ -24,6 +24,12 @@ input:not([type=checkbox]):not([type=range]), select { padding: 6px 8px; border:
 button { padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); cursor: pointer; }
 button:hover { border-color: var(--accent); }
 #stop { border-color: var(--warn); color: var(--warn); }
+#mute.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand img { border-radius: 6px; display: block; }
+.ver { color: var(--muted); font-size: 12px; }
+.sep { width: 1px; height: 20px; background: var(--line); margin: 0 6px; }
+@media (max-width: 560px) { .sep { display: none; } header { flex-wrap: wrap; } }
 .speed { display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .list { list-style: none; margin: 0; padding: 0; }
 .list li { display: flex; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); align-items: baseline; }
@@ -32,7 +38,7 @@ button:hover { border-color: var(--accent); }
 .meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .text { flex: 1; overflow-wrap: anywhere; }
 .speaking .text { font-weight: 600; }
-.cancelled .text, .failed .text { color: var(--muted); text-decoration: line-through; }
+.cancelled .text, .muted .text, .failed .text { color: var(--muted); text-decoration: line-through; }
 .small { padding: 2px 8px; font-size: 12px; }
 .note { color: var(--muted); margin: 0 0 8px; }
 .error { color: var(--warn); }

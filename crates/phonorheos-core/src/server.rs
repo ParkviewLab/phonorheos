@@ -5,8 +5,10 @@
 //! listener applies its own access rule (see `access`).
 //!
 //! - `POST /speak` `{"text", "client"?, "voice"?, "speed"?, "by_clause"?, "speak"?, "cache"?}` → 201
-//!   `{"id", "event", "ahead"}`; `cache` keeps the speech so that it plays at once next
-//!   time, and `speak: false` with it makes the speech without playing it
+//!   `{"id", "event", "ahead", "muted"}`; `cache` keeps the speech so that it plays at once next
+//!   time, and `speak: false` with it makes the speech without playing it; `muted` says
+//!   whether the app was muted when the request was accepted (only its window changes
+//!   that: an item to be played while muted is skipped and ends `cancelled`, reason `muted`)
 //! - `DELETE /speak/{id}` → 204, or 404
 //! - `POST /stop` → `{"stopped": n}`
 //! - `GET /events?item=&client=&last_id=` (or `Last-Event-ID`) → Server-Sent Events
@@ -239,6 +241,7 @@ async fn status(State(ctx): State<Ctx>) -> Response {
         "voice": ctx.core.voice(),
         "speaking": items.iter().find(|i| i.state == crate::queue::State::Speaking),
         "queued": items.iter().filter(|i| i.state == crate::queue::State::Queued).count(),
+        "muted": ctx.core.muted(),
         "readers": ctx.core.readers(),
     }))
     .into_response()

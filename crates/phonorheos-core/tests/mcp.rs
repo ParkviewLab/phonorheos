@@ -74,14 +74,31 @@ async fn it_initializes_and_lists_say_and_stop() {
     assert_eq!(code, StatusCode::OK);
     assert_eq!(body["result"]["serverInfo"]["name"], "phonorheos");
     let (_, body) = send(&app, rpc("tools/list", json!({}))).await;
-    let mut names: Vec<_> = body["result"]["tools"]
-        .as_array()
-        .unwrap()
+    let tools = body["result"]["tools"].as_array().unwrap();
+    let mut names: Vec<_> = tools
         .iter()
         .map(|t| t["name"].as_str().unwrap().to_string())
         .collect();
     names.sort();
     assert_eq!(names, ["say", "stop"]);
+    // Mute is changed only in the app's window: no tool takes it.
+    for t in tools {
+        assert!(t["inputSchema"]["properties"].get("muted").is_none(), "{t}");
+    }
+}
+
+#[tokio::test]
+async fn say_tells_whether_the_app_is_muted_and_a_client_cannot_change_it() {
+    let c = core();
+    let app = router(c.clone(), Source::Loopback(35861));
+    let (_, body) = send(&app, call("say", json!({"text": "one"}))).await;
+    let reply: Value = serde_json::from_str(&result(&body).0).unwrap();
+    assert_eq!(reply["muted"], false);
+    c.set_muted(true);
+    let (_, body) = send(&app, call("say", json!({"text": "two", "muted": false}))).await;
+    let reply: Value = serde_json::from_str(&result(&body).0).unwrap();
+    assert_eq!(reply["muted"], true);
+    assert!(c.muted(), "an argument cannot unmute");
 }
 
 #[tokio::test]
