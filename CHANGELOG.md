@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.7.0] - 2026-11-04
+
+### Highlights
+
+This release adds a Mute button to the app window, which silences speech without clearing the queue: items that come up while muted are skipped rather than held and end as a `cancelled` event with the reason `muted`, anything currently playing is silenced immediately, and speech requested only for caching (`speak: false`, `cache: true`) is still generated. Mute can only be toggled from the window — `GET /status`, the `POST /speak` response and the MCP `say` result report a `muted` field, but no HTTP endpoint, MCP tool or command can set it, and the app always starts unmuted. The header now shows the app icon, name and version, the state line reads "Muted" while mute is on, and the Recently spoken list marks muted items; the README and user manual have been updated to match.
+
+### Features
+
+- A mute button, the muted state in status and MCP, and a branded header (#33)
+
 ## [v0.6.0] - 2026-11-03
 
 ### Highlights
