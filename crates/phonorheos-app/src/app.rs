@@ -175,6 +175,7 @@ pub fn run() {
             issue_token,
             revoke_token,
             stop,
+            set_muted,
             withdraw,
             try_say,
             set_autostart
@@ -194,6 +195,7 @@ async fn keep_recent(state: Arc<State>) {
             let text = texts.remove(&e.item).unwrap_or_default();
             let outcome = match e.kind {
                 Kind::Finished => "spoken",
+                Kind::Cancelled if e.reason.as_deref() == Some("muted") => "muted",
                 Kind::Cancelled => "cancelled",
                 _ => "failed",
             };
@@ -239,6 +241,7 @@ async fn app_state(app: tauri::AppHandle, state: S<'_>) -> Result<Value, String>
         "port": phonorheos_core::PORT,
         "voice": state.core.voice(),
         "queue": state.core.queue(),
+        "muted": state.core.muted(),
         "readers": state.core.readers(),
         "recent": *state.recent.lock().expect("recent lock"),
         "voices": VOICES,
@@ -331,6 +334,12 @@ fn revoke_token(state: S<'_>, id: String) -> Result<(), String> {
 #[tauri::command]
 fn stop(state: S<'_>) -> usize {
     state.core.stop()
+}
+
+/// The only place mute is changed: clients are told of it and cannot alter it.
+#[tauri::command]
+fn set_muted(state: S<'_>, on: bool) {
+    state.core.set_muted(on);
 }
 
 #[tauri::command]
