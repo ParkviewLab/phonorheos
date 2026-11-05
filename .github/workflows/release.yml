@@ -118,6 +118,15 @@ jobs:
         run: scripts/install-tauri-cli
       - name: Build the app and its disk image
         run: scripts/build-app
+      # On GitHub's macOS runners the stapler's connection to Apple's ticket service, made
+      # over HTTP/3 on UDP 443, is dropped often (actions/runner-images#14924; it failed
+      # both attempts of v0.8.0). Blocking outbound UDP 443 makes the stapler fall back to
+      # HTTPS over TCP, which holds. This is GitHub's own workaround, to be removed once
+      # that issue is closed.
+      - name: Work around the stapler's dropped HTTP/3 connection (actions/runner-images#14924)
+        run: |
+          echo "block return out quick proto udp from any to any port 443" | sudo pfctl -f -
+          sudo pfctl -E
       - name: Notarise and staple
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}

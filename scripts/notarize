@@ -22,6 +22,21 @@ if [ "$STATUS" != "Accepted" ]; then
   echo "notarization status: $STATUS" >&2
   exit 1
 fi
-xcrun stapler staple "$DMG"
-xcrun stapler validate "$DMG"
+# The stapler fetches the ticket from Apple's CloudKit service, and that connection drops
+# at times (actions/runner-images#14924). A failed staple leaves the image as it was, so
+# the staple and the validation are each repeated, after a growing pause, up to five times.
+retry() {
+  attempt=1
+  while ! "$@"; do
+    if [ "$attempt" -ge 5 ]; then
+      echo "giving up after $attempt attempts: $*" >&2
+      return 1
+    fi
+    echo "attempt $attempt failed: $*; trying again in $((attempt * 15)) seconds" >&2
+    sleep $((attempt * 15))
+    attempt=$((attempt + 1))
+  done
+}
+retry xcrun stapler staple "$DMG"
+retry xcrun stapler validate "$DMG"
 spctl --assess --type open --context context:primary-signature --verbose "$DMG"
