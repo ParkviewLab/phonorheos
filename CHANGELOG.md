@@ -4,6 +4,17 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.9.0] - 2026-11-05
+
+### Highlights
+
+This release contains only fixes to the release workflow, which had failed to publish v0.7.0 and v0.8.0. The GitHub Release is now created in three retried, repeatable steps — draft, upload with `--clobber`, publish — so a re-run of a failed job completes the Release rather than leaving an empty draft. On macOS, outbound UDP 443 is blocked before notarisation so that `xcrun stapler` falls back to TCP, working around a known GitHub runner issue, and the staple and validate calls are retried up to five times.
+
+### Bug fixes
+
+- Make the GitHub Release in repeatable, retried steps (#34)
+- Keep the stapler's connection to Apple on GitHub's runners (#36)
+
 ## [v0.7.0] - 2026-11-04
 
 ### Highlights
