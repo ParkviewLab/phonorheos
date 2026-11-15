@@ -64,9 +64,11 @@ impl Endpoint {
 
 const USAGE: &str = "usage:
   phonorheos say [--voice <voice>] [--speed <0.5..2>] [--by-clause | --whole] [--cache] [--silent]
-                 [--no-wait] <text>…
-    --cache   keep the speech, so that the same text plays at once next time
-    --silent  with --cache, make the speech without playing it
+                 [--no-wait] [--to-file <path.wav>] <text>…
+    --cache    keep the speech, so that the same text plays at once next time
+    --silent   with --cache, make the speech without playing it
+    --to-file  write the speech to a WAV file (24 kHz mono) instead of playing it;
+               waits until the file is complete
   phonorheos stop
   phonorheos status
   phonorheos --version";
@@ -111,6 +113,7 @@ struct Say {
     cache: bool,
     silent: bool,
     wait: bool,
+    to_file: Option<std::path::PathBuf>,
 }
 
 fn parse_say(args: &[String]) -> Result<Say, String> {
@@ -122,6 +125,7 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
         cache: false,
         silent: false,
         wait: true,
+        to_file: None,
     };
     let mut words = Vec::new();
     let mut it = args.iter();
@@ -137,6 +141,9 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
             "--cache" => s.cache = true,
             "--silent" => s.silent = true,
             "--no-wait" => s.wait = false,
+            "--to-file" => {
+                s.to_file = Some(it.next().ok_or("--to-file needs a path")?.into());
+            }
             "--" => words.extend(it.by_ref().cloned()),
             _ => words.push(a.clone()),
         }
@@ -147,6 +154,23 @@ fn parse_say(args: &[String]) -> Result<Say, String> {
     }
     if s.silent && !s.cache {
         return Err("--silent needs --cache, or it does nothing".into());
+    }
+    if let Some(path) = &s.to_file {
+        if !path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("wav"))
+        {
+            return Err(format!(
+                "--to-file writes WAV only: {} must end in .wav",
+                path.display()
+            ));
+        }
+        if s.silent || !s.wait {
+            return Err(
+                "--to-file never plays and always waits for the file; drop --silent and --no-wait"
+                    .into(),
+            );
+        }
     }
     Ok(s)
 }
@@ -168,6 +192,15 @@ fn say(socket: &Endpoint, args: &[String]) -> Result<(), String> {
     }
     if s.silent {
         body["speak"] = false.into();
+    }
+    if let Some(path) = &s.to_file {
+        let (code, audio) = request_bytes(socket, "POST", "/render", Some(&body.to_string()))?;
+        if code != 200 {
+            let reply: serde_json::Value = serde_json::from_slice(&audio).unwrap_or_default();
+            return Err(reply["error"].as_str().unwrap_or("refused").to_string());
+        }
+        return std::fs::write(path, &audio)
+            .map_err(|e| format!("cannot write {}: {e}", path.display()));
     }
     let (code, reply) = request(socket, "POST", "/speak", Some(&body.to_string()))?;
     let reply: serde_json::Value =
@@ -217,13 +250,24 @@ fn wait_for_end(socket: &Endpoint, id: &str, after: u64) -> Result<(), String> {
     Err("the app closed the stream before the text was spoken".into())
 }
 
-/// One request, read to its end; returns the status code and the body.
+/// One request, read to its end; returns the status code and the body as text.
 fn request(
     socket: &Endpoint,
     method: &str,
     path: &str,
     body: Option<&str>,
 ) -> Result<(u16, String), String> {
+    request_bytes(socket, method, path, body)
+        .map(|(code, body)| (code, String::from_utf8_lossy(&body).into_owned()))
+}
+
+/// One request, read to its end; returns the status code and the body's bytes.
+fn request_bytes(
+    socket: &Endpoint,
+    method: &str,
+    path: &str,
+    body: Option<&str>,
+) -> Result<(u16, Vec<u8>), String> {
     let mut stream = socket.connect()?;
     let body = body.unwrap_or("");
     let head = format!(
@@ -256,7 +300,7 @@ fn request(
     } else {
         body.to_vec()
     };
-    Ok((code, String::from_utf8_lossy(&body).into_owned()))
+    Ok((code, body))
 }
 
 /// The body of a chunked reply, put back together as bytes (a chunk may end inside a
@@ -321,6 +365,11 @@ mod tests {
         let s = parse_say(&args(&["x"])).unwrap();
         assert!(!s.cache && !s.silent);
         assert!(parse_say(&args(&["--silent", "x"])).is_err());
+        let s = parse_say(&args(&["--to-file", "a.WAV", "Hello."])).unwrap();
+        assert_eq!(s.to_file.as_deref(), Some(std::path::Path::new("a.WAV")));
+        assert!(parse_say(&args(&["--to-file", "a.opus", "x"])).is_err());
+        assert!(parse_say(&args(&["--to-file", "a.wav", "--no-wait", "x"])).is_err());
+        assert!(parse_say(&args(&["--to-file"])).is_err());
     }
 
     #[test]

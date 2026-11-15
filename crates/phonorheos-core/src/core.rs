@@ -13,7 +13,7 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, RwLock};
-use tokio::sync::{Notify, broadcast, watch};
+use tokio::sync::{Notify, broadcast, oneshot, watch};
 
 /// What the player must do to the item it is speaking.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,7 +81,12 @@ pub struct Request {
     pub speak: bool,
     /// Whether to keep its speech once made.
     pub cache: bool,
+    /// Whether its speech is returned to the client rather than played (`render`).
+    pub render: bool,
 }
+
+/// The speech of an item to render, or why it was not made.
+pub type Rendered = Result<Vec<Vec<u8>>, String>;
 
 /// What the server returns for an accepted request.
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -110,6 +115,8 @@ pub struct Core {
     changed: watch::Sender<u64>,
     /// Set only by the app's window; clients are told of it and cannot change it.
     muted: AtomicBool,
+    /// The clients waiting for an item's speech, by item id (`render`).
+    renders: Mutex<BTreeMap<String, oneshot::Sender<Rendered>>>,
 }
 
 impl Default for Core {
@@ -132,6 +139,7 @@ impl Core {
             cache: Mutex::default(),
             changed: watch::channel(0).0,
             muted: AtomicBool::new(false),
+            renders: Mutex::default(),
         }
     }
 
@@ -150,6 +158,29 @@ impl Core {
     }
 
     pub fn speak(&self, r: Request) -> Accepted {
+        self.enqueue(r, None)
+    }
+
+    /// Queues text whose speech is made but not played, and returned through the
+    /// receiver once complete; an item that fails or is cancelled returns why.
+    pub fn render(&self, r: Request) -> (Accepted, oneshot::Receiver<Rendered>) {
+        let (tx, rx) = oneshot::channel();
+        let r = Request {
+            speak: false,
+            render: true,
+            ..r
+        };
+        (self.enqueue(r, Some(tx)), rx)
+    }
+
+    /// The player calls this with the whole speech of an item to render.
+    pub fn rendered(&self, item: &Item, chunks: Vec<Vec<u8>>) {
+        if let Some(tx) = self.renders.lock().expect("renders lock").remove(&item.id) {
+            let _ = tx.send(Ok(chunks));
+        }
+    }
+
+    fn enqueue(&self, r: Request, waiting: Option<oneshot::Sender<Rendered>>) -> Accepted {
         let item = Item {
             id: uuid::Uuid::new_v4().to_string(),
             text: r.text,
@@ -159,7 +190,14 @@ impl Core {
             by_clause: r.by_clause,
             speak: r.speak,
             cache: r.cache,
+            render: r.render,
         };
+        if let Some(tx) = waiting {
+            self.renders
+                .lock()
+                .expect("renders lock")
+                .insert(item.id.clone(), tx);
+        }
         let (ahead, event) = {
             let mut q = self.queue.lock().expect("queue lock");
             let ahead = q.push(item.clone());
@@ -194,6 +232,7 @@ impl Core {
     pub fn withdraw(&self, id: &str) -> bool {
         let found = match self.queue.lock().expect("queue lock").withdraw(id) {
             Withdrawn::Queued(item) => {
+                self.unrender(&item, "withdrawn");
                 self.publish(Kind::Cancelled, &item, Some("withdrawn".into()), false);
                 true
             }
@@ -214,6 +253,7 @@ impl Core {
     pub fn stop(&self) -> usize {
         let (removed, speaking) = self.queue.lock().expect("queue lock").stop();
         for item in &removed {
+            self.unrender(item, "stopped");
             self.publish(Kind::Cancelled, item, Some("stopped".into()), false);
         }
         if let Some(item) = &speaking {
@@ -274,6 +314,12 @@ impl Core {
         {
             return;
         }
+        let why = match &outcome {
+            Outcome::Finished => "no speech was made",
+            Outcome::Cancelled | Outcome::Muted => "cancelled before the speech was made",
+            Outcome::Failed(why) => why.as_str(),
+        };
+        self.unrender(item, why);
         match outcome {
             Outcome::Finished => self.publish(Kind::Finished, item, None, false),
             Outcome::Cancelled => self.publish(
@@ -287,6 +333,13 @@ impl Core {
         };
         self.wake.notify_one();
         self.touch();
+    }
+
+    /// Tells a client waiting for an item's speech that none will come, and why.
+    fn unrender(&self, item: &Item, why: &str) {
+        if let Some(tx) = self.renders.lock().expect("renders lock").remove(&item.id) {
+            let _ = tx.send(Err(why.to_string()));
+        }
     }
 
     pub fn control(&self) -> broadcast::Receiver<Control> {
@@ -403,6 +456,7 @@ mod tests {
             by_clause: None,
             speak: true,
             cache: false,
+            render: false,
         }
     }
 
@@ -569,6 +623,29 @@ mod tests {
         assert!(core.cached(&key).is_none());
         core.keep(key.clone(), vec![vec![1]], core.cache_generation());
         assert!(core.cached(&key).is_some());
+    }
+
+    #[tokio::test]
+    async fn a_render_returns_the_speech_and_is_never_played() {
+        let core = Core::default();
+        let (_, made) = core.render(request("hello"));
+        let item = core.next().await;
+        assert!(item.render && !item.speak);
+        core.rendered(&item, vec![vec![1, 0]]);
+        core.finished(&item, Outcome::Finished);
+        assert_eq!(made.await.unwrap(), Ok(vec![vec![1, 0]]));
+    }
+
+    #[tokio::test]
+    async fn a_render_that_fails_or_is_stopped_says_why() {
+        let core = Core::default();
+        let (_, failed) = core.render(request("one"));
+        let (_, stopped) = core.render(request("two"));
+        let item = core.next().await;
+        core.finished(&item, Outcome::Failed("the voice is gone".into()));
+        assert_eq!(failed.await.unwrap(), Err("the voice is gone".into()));
+        core.stop();
+        assert_eq!(stopped.await.unwrap(), Err("stopped".into()));
     }
 
     #[test]

@@ -20,6 +20,9 @@ pub struct Item {
     pub speak: bool,
     /// Whether to keep its speech once made.
     pub cache: bool,
+    /// Whether its speech is returned to the client that asked (`POST /render`), not
+    /// played.
+    pub render: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -154,6 +157,7 @@ mod tests {
             by_clause: None,
             speak: true,
             cache: false,
+            render: false,
         }
     }
 

@@ -117,6 +117,7 @@ The `phonorheos` command talks to the running app and opens no window:
 | `phonorheos say --by-clause "…"` or `--whole` | Chooses how the text is cut, whatever the window's setting. |
 | `phonorheos say --cache "…"` | Speaks the text and keeps its speech, so that it plays at once next time (see "Phrases that play at once"). |
 | `phonorheos say --cache --silent "…"` | Makes and keeps the speech without playing it. |
+| `phonorheos say --to-file speech.wav "…"` | Writes the speech to a WAV file (24 kHz, mono, 16-bit) instead of playing it, and waits until the file is complete. The path must end in `.wav`. |
 | `phonorheos stop` | Silences everything. |
 | `phonorheos status` | Prints the version, the voice's state, what is being spoken, how many items wait and whether it is muted. |
 

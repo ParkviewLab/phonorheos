@@ -13,6 +13,7 @@ pub mod mcp;
 pub mod paths;
 pub mod queue;
 pub mod server;
+pub mod wav;
 
 /// The port phonorheos listens on at 127.0.0.1 (and, when switched on, on the LAN);
 /// graptostream's is 35860.

@@ -7,6 +7,7 @@
 //! played from the cache without asking the helper; an item marked `cache` has its
 //! speech kept once made; an item not to be spoken is made and kept, but not played.
 //! Whilst the app is muted an item to be played is skipped, not held, and ends muted.
+//! An item to render is made, not played, and its speech handed to the client waiting.
 
 use crate::audio::Output;
 use crate::helper::{Helper, Said};
@@ -45,6 +46,9 @@ pub async fn run(core: Arc<Core>, helper: Helper, output: Output, defaults: Arc<
         let muted = item.speak && core.muted();
         let play = item.speak && !muted;
         let outcome = if let Some(chunks) = core.cached(&key) {
+            if item.render {
+                core.rendered(&item, chunks.to_vec());
+            }
             if play {
                 for pcm in chunks.iter() {
                     output.push(pcm);
@@ -119,6 +123,7 @@ async fn speak(
     let generation = core.cache_generation();
     helper.speak(&item.id, &item.text, voice, speed, by_clause);
     let mut started = false;
+    // Kept to cache, or to return to the client that asked for it.
     let mut kept: Vec<Vec<u8>> = Vec::new();
     let mut failure: Option<String> = None;
     loop {
@@ -132,7 +137,7 @@ async fn speak(
                             core.started(item);
                         }
                     }
-                    if item.cache {
+                    if item.cache || item.render {
                         kept.push(pcm);
                     }
                 }
@@ -156,6 +161,9 @@ async fn speak(
             output.clear();
         }
         return Outcome::Failed(why);
+    }
+    if item.render {
+        core.rendered(item, kept.clone());
     }
     if item.cache {
         core.keep(key, kept, generation);

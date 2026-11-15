@@ -9,6 +9,9 @@
 //!   time, and `speak: false` with it makes the speech without playing it; `muted` says
 //!   whether the app was muted when the request was accepted (only its window changes
 //!   that: an item to be played while muted is skipped and ends `cancelled`, reason `muted`)
+//! - `POST /render` with the same body (`speak` ignored) → 200 `audio/wav`: the speech
+//!   made but not played, returned once it is complete, in turn with the queue; the
+//!   app writes no file, the client does (`phonorheos say --to-file`)
 //! - `DELETE /speak/{id}` → 204, or 404
 //! - `POST /stop` → `{"stopped": n}`
 //! - `GET /events?item=&client=&last_id=` (or `Last-Event-ID`) → Server-Sent Events
@@ -76,6 +79,7 @@ pub fn router(core: Arc<Core>, source: Source) -> Router {
     Router::new()
         .route("/speak", post(speak))
         .route("/speak/{id}", delete(withdraw))
+        .route("/render", post(render))
         .route("/stop", post(stop))
         .route("/events", get(events))
         .route("/queue", get(queue))
@@ -214,7 +218,41 @@ pub(crate) fn request(
         by_clause,
         speak,
         cache,
+        render: false,
     })
+}
+
+async fn render(
+    State(ctx): State<Ctx>,
+    Extension(token): Extension<TokenName>,
+    headers: HeaderMap,
+    body: Result<Json<SpeakBody>, axum::extract::rejection::JsonRejection>,
+) -> Response {
+    let Ok(Json(body)) = body else {
+        return error(StatusCode::BAD_REQUEST, "expected JSON with a text");
+    };
+    let r = match request(
+        &body.text,
+        client_name(&token, body.client, &headers),
+        body.voice,
+        body.speed,
+        body.by_clause,
+        Some(true),
+        body.cache,
+    ) {
+        Ok(r) => r,
+        Err((code, why)) => return error(code, why),
+    };
+    let (_, made) = ctx.core.render(r);
+    match made.await {
+        Ok(Ok(chunks)) => (
+            [(axum::http::header::CONTENT_TYPE, "audio/wav")],
+            crate::wav::wav(&chunks),
+        )
+            .into_response(),
+        Ok(Err(why)) => error(StatusCode::INTERNAL_SERVER_ERROR, &why),
+        Err(_) => error(StatusCode::INTERNAL_SERVER_ERROR, "the speech was not made"),
+    }
 }
 
 async fn withdraw(State(ctx): State<Ctx>, Path(id): Path<String>) -> Response {
