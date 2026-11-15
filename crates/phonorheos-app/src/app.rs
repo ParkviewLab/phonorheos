@@ -362,6 +362,7 @@ fn try_say(state: S<'_>, text: String, voice: Option<String>) -> Result<String, 
         by_clause: None,
         speak: true,
         cache: false,
+        render: false,
     });
     Ok(accepted.id)
 }
