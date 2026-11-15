@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.10.0] - 2026-11-15
+
+### Highlights
+
+Speech can now be rendered to a file instead of played: `POST /render` accepts the same body as `POST /speak` and returns a 24 kHz, mono, 16-bit WAV once the speech has been made in queue order, or a 500 with the reason if it was stopped, withdrawn, or the voice failed. The `phonorheos say --to-file <path.wav>` option writes that audio to disk; the path must end in `.wav`, and `--silent` and `--no-wait` are rejected alongside it. The client, not the application, writes the file, so no request names a path the application writes to, and WAV is the only output format — the reasoning is recorded as decision R1 in `docs/why.md`.
+
+### Features
+
+- Render speech to a WAV file (POST /render, say --to-file) (#38)
+
 ## [v0.9.0] - 2026-11-05
 
 ### Highlights
