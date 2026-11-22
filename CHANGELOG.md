@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.11.0] - 2026-11-21
+
+### Highlights
+
+A new `GET /voices` endpoint returns the 28 available voices with their id, display name, accent and gender, in the order shown in the window, and marks which one is the current default; it is reachable over the socket, on `127.0.0.1:35861` and on the LAN under the existing token rule. `GET /status` now also reports `default_voice`, which tracks the default chosen in the window while the app runs, separately from the existing `voice` key. The same catalogue is exposed as an MCP tool named `voices`, so sessions that allow phonorheos's tools without prompting need `mcp__phonorheos__voices` added to their allow list.
+
+### Features
+
+- GET /voices lists the voices phonorheos can speak with (#40)
+
 ## [v0.10.0] - 2026-11-15
 
 ### Highlights
