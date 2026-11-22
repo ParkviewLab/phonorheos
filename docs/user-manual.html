@@ -385,7 +385,7 @@ footer.site {
   <section id="voices-and-speed">
     <h2>Voices and speed</h2>
     <div class="prose">
-      <p>phonorheos offers Kokoro's 28 English voices. A name beginning <code>bm_</code> or <code>bf_</code> is a British male or female voice, and <code>am_</code> or <code>af_</code> an American one. <code>bm_lewis</code> is the default. Whichever voice speaks, words are pronounced the British way.</p>
+      <p>phonorheos offers Kokoro's 28 English voices. A name beginning <code>bm_</code> or <code>bf_</code> is a British male or female voice, and <code>am_</code> or <code>af_</code> an American one. <code>bm_lewis</code> is the default. Whichever voice speaks, words are pronounced the British way. Other apps can ask phonorheos for this list, with each voice's accent and gender and the one chosen in the window, so that they can offer the same voices in their own settings.</p>
     </div>
 
     <div class="key" aria-label="Voice name prefixes">
@@ -525,7 +525,7 @@ footer.site {
     <h2>From Claude Code and other MCP clients</h2>
     <p class="prose">phonorheos is also a Model Context Protocol server, at <code>http://127.0.0.1:35861/mcp</code>, so that an AI assistant can speak with a tool rather than a command. Register it once in Claude Code:</p>
 <pre><code>claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp</code></pre>
-    <p class="prose">A session started afterwards has two tools: <code>say</code>, which speaks text (optionally in another voice or at another speed, and with the <code>speak</code> and <code>cache</code> choices described under <a href="#kept">Phrases that play at once</a>) and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it), and <code>stop</code>, which silences everything. phonorheos must be running when the session starts. From another machine, use <code>http://&lt;this-machine&gt;.local:35861/mcp</code> with the network switched on and a token, given to the client as an <code>Authorization: Bearer &lt;token&gt;</code> header (in Claude Code, <code>--header "Authorization: Bearer &lt;token&gt;"</code>).</p>
+    <p class="prose">A session started afterwards has three tools: <code>say</code>, which speaks text (optionally in another voice or at another speed, and with the <code>speak</code> and <code>cache</code> choices described under <a href="#kept">Phrases that play at once</a>) and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it); <code>stop</code>, which silences everything; and <code>voices</code>, which lists the voices <code>say</code> can use and marks the one chosen in the window. phonorheos must be running when the session starts. From another machine, use <code>http://&lt;this-machine&gt;.local:35861/mcp</code> with the network switched on and a token, given to the client as an <code>Authorization: Bearer &lt;token&gt;</code> header (in Claude Code, <code>--header "Authorization: Bearer &lt;token&gt;"</code>).</p>
   </section>
 
   <!-- ===================================================== LOGIN -->
