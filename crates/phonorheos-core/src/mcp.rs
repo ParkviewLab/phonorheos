@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! The Model Context Protocol at `POST /mcp`, so that an MCP client (a Claude Code
-//! session, say) speaks with a tool call instead of a shell command. Two tools:
+//! session, say) speaks with a tool call instead of a shell command. Three tools:
 //! `say`, which queues text exactly as `POST /speak` does (with its `speak` and `cache`
-//! options) and returns at once, and
-//! `stop`. Stateless, with plain JSON replies; the listener's access check (`Host`,
+//! options) and returns at once; `stop`; and `voices`, which returns what
+//! `GET /voices` does. Stateless, with plain JSON replies; the listener's access check (`Host`,
 //! `Origin`, LAN tokens) has already run, so rmcp's own `Host` check is off.
 
 use crate::core::Core;
@@ -80,6 +80,13 @@ impl Phonorheos {
     fn stop(&self) -> CallToolResult {
         CallToolResult::success(vec![ContentBlock::text(
             json!({ "stopped": self.core.stop() }).to_string(),
+        )])
+    }
+
+    #[tool(description = "List the voices say can use, the default marked.")]
+    fn voices(&self) -> CallToolResult {
+        CallToolResult::success(vec![ContentBlock::text(
+            crate::voices::listing(&self.core.default_voice()).to_string(),
         )])
     }
 }

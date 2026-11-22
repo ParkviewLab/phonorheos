@@ -87,6 +87,11 @@ pub fn all(default: &str) -> Vec<Voice> {
     VOICES.iter().map(|id| describe(id, default)).collect()
 }
 
+/// What `GET /voices` and the MCP `voices` tool return.
+pub fn listing(default: &str) -> serde_json::Value {
+    serde_json::json!({ "default": default, "voices": all(default) })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

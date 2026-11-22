@@ -135,7 +135,7 @@ phonorheos is also a Model Context Protocol server, at `http://127.0.0.1:35861/m
 claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp
 ```
 
-A session started afterwards has two tools: `say`, which speaks text (optionally in another voice or at another speed, and with the `speak` and `cache` choices described under "Phrases that play at once") and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it), and `stop`, which silences everything. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
+A session started afterwards has three tools: `say`, which speaks text (optionally in another voice or at another speed, and with the `speak` and `cache` choices described under "Phrases that play at once") and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it); `stop`, which silences everything; and `voices`, which lists the voices `say` can use and marks the one chosen in the window. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
 
 ## Starting at login
 

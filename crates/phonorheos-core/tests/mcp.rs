@@ -60,7 +60,7 @@ fn result(body: &Value) -> (String, bool) {
 }
 
 #[tokio::test]
-async fn it_initializes_and_lists_say_and_stop() {
+async fn it_initializes_and_lists_say_stop_and_voices() {
     let app = router(core(), Source::Loopback(35861));
     let (code, body) = send(
         &app,
@@ -80,7 +80,7 @@ async fn it_initializes_and_lists_say_and_stop() {
         .map(|t| t["name"].as_str().unwrap().to_string())
         .collect();
     names.sort();
-    assert_eq!(names, ["say", "stop"]);
+    assert_eq!(names, ["say", "stop", "voices"]);
     // Mute is changed only in the app's window: no tool takes it.
     for t in tools {
         assert!(t["inputSchema"]["properties"].get("muted").is_none(), "{t}");
@@ -185,6 +185,20 @@ async fn stop_empties_the_queue() {
     let (_, body) = send(&app, call("stop", json!({}))).await;
     assert_eq!(result(&body).0, r#"{"stopped":2}"#);
     assert!(c.queue().is_empty());
+}
+
+#[tokio::test]
+async fn voices_lists_the_voices_with_the_windows_default() {
+    let c = core();
+    c.set_default_voice("bf_emma");
+    let app = router(c.clone(), Source::Loopback(35861));
+    let (_, body) = send(&app, call("voices", json!({}))).await;
+    let (text, error) = result(&body);
+    assert!(!error, "{body}");
+    let listing: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(listing["default"], "bf_emma");
+    assert_eq!(listing["voices"].as_array().unwrap().len(), 28);
+    assert_eq!(listing, phonorheos_core::voices::listing("bf_emma"));
 }
 
 #[tokio::test]
