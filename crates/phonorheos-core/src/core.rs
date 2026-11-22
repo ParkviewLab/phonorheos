@@ -117,6 +117,8 @@ pub struct Core {
     muted: AtomicBool,
     /// The clients waiting for an item's speech, by item id (`render`).
     renders: Mutex<BTreeMap<String, oneshot::Sender<Rendered>>>,
+    /// The voice for text that names none, as chosen in the window.
+    default_voice: RwLock<String>,
 }
 
 impl Default for Core {
@@ -140,6 +142,7 @@ impl Core {
             changed: watch::channel(0).0,
             muted: AtomicBool::new(false),
             renders: Mutex::default(),
+            default_voice: RwLock::new(crate::voices::FACTORY_DEFAULT.into()),
         }
     }
 
@@ -361,6 +364,20 @@ impl Core {
 
     pub fn voice(&self) -> VoiceStatus {
         self.voice.lock().expect("voice lock").clone()
+    }
+
+    /// The voice that speaks text naming none.
+    pub fn default_voice(&self) -> String {
+        self.default_voice
+            .read()
+            .expect("default voice lock")
+            .clone()
+    }
+
+    /// Set by the app from its settings, at start and when the window changes them.
+    pub fn set_default_voice(&self, voice: &str) {
+        *self.default_voice.write().expect("default voice lock") = voice.to_string();
+        self.touch();
     }
 
     pub fn set_voice(&self, status: VoiceStatus) {

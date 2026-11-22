@@ -55,7 +55,7 @@ From top to bottom, the window shows:
 
 ## Voices and speed
 
-phonorheos offers Kokoro's 28 English voices. A name beginning `bm_` or `bf_` is a British male or female voice, and `am_` or `af_` an American one. `bm_lewis` is the default. Whichever voice speaks, words are pronounced the British way.
+phonorheos offers Kokoro's 28 English voices. A name beginning `bm_` or `bf_` is a British male or female voice, and `am_` or `af_` an American one. `bm_lewis` is the default. Whichever voice speaks, words are pronounced the British way. Other apps can ask phonorheos for this list, with each voice's accent and gender and the one chosen in the window, so that they can offer the same voices in their own settings.
 
 The speed runs from 0.5 (half) to 2 (double). The voice and speed in the window apply to any text that does not name its own; an app may name a voice and a speed for each piece it sends.
 
@@ -135,7 +135,7 @@ phonorheos is also a Model Context Protocol server, at `http://127.0.0.1:35861/m
 claude mcp add --transport http --scope user phonorheos http://127.0.0.1:35861/mcp
 ```
 
-A session started afterwards has two tools: `say`, which speaks text (optionally in another voice or at another speed, and with the `speak` and `cache` choices described under "Phrases that play at once") and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it), and `stop`, which silences everything. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
+A session started afterwards has three tools: `say`, which speaks text (optionally in another voice or at another speed, and with the `speak` and `cache` choices described under "Phrases that play at once") and returns as soon as it is queued, saying whether phonorheos is muted (muted speech is skipped, and no tool can unmute it); `stop`, which silences everything; and `voices`, which lists the voices `say` can use and marks the one chosen in the window. phonorheos must be running when the session starts. From another machine, use `http://<this-machine>.local:35861/mcp` with the network switched on and a token, given to the client as an `Authorization: Bearer <token>` header (in Claude Code, `--header "Authorization: Bearer <token>"`).
 
 ## Starting at login
 
