@@ -183,6 +183,70 @@ async fn the_lan_names_the_client_by_its_token() {
 }
 
 #[tokio::test]
+async fn the_voices_are_listed_with_the_default_marked() {
+    let c = core();
+    let (code, body) = send(&c, get("/voices")).await;
+    assert_eq!(code, StatusCode::OK);
+    let voices = body["voices"].as_array().unwrap();
+    assert_eq!(voices.len(), 28);
+    assert_eq!(body["default"], "bm_lewis");
+    let emma = voices.iter().find(|v| v["id"] == "bf_emma").unwrap();
+    assert_eq!(
+        *emma,
+        json!({"id": "bf_emma", "name": "Emma", "accent": "british", "gender": "female", "default": false})
+    );
+    let marked: Vec<&Value> = voices.iter().filter(|v| v["default"] == true).collect();
+    assert_eq!(marked.len(), 1);
+    assert_eq!(marked[0]["id"], "bm_lewis");
+}
+
+#[tokio::test]
+async fn the_default_voice_follows_the_window() {
+    let c = core();
+    c.set_default_voice("af_heart");
+    let (_, body) = send(&c, get("/voices")).await;
+    assert_eq!(body["default"], "af_heart");
+    let marked: Vec<&Value> = body["voices"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|v| v["default"] == true)
+        .collect();
+    assert_eq!(marked.len(), 1);
+    assert_eq!(marked[0]["id"], "af_heart");
+    let (_, status) = send(&c, get("/status")).await;
+    assert_eq!(status["default_voice"], "af_heart");
+}
+
+#[tokio::test]
+async fn on_the_lan_the_voices_need_a_token() {
+    let c = core();
+    let (secret, token) = issue("speed", "now".into());
+    c.set_tokens(vec![token]);
+    let lan = router(c.clone(), Source::Network);
+    let anon = Request::get("/voices").body(Body::empty()).unwrap();
+    assert_eq!(
+        lan.clone().oneshot(anon).await.unwrap().status(),
+        StatusCode::UNAUTHORIZED
+    );
+    let with = Request::get("/voices")
+        .header("authorization", format!("Bearer {secret}"))
+        .body(Body::empty())
+        .unwrap();
+    assert_eq!(lan.oneshot(with).await.unwrap().status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn the_voices_are_on_the_socket_too() {
+    let c = core();
+    let res = router(c, Source::Socket)
+        .oneshot(Request::get("/voices").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+}
+
+#[tokio::test]
 async fn the_stream_replays_an_items_story_from_its_queued_event() {
     let c = core();
     let (_, a) = send(&c, post("/speak", json!({"text": "hi", "client": "cli"}))).await;

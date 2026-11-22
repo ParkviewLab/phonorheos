@@ -14,6 +14,7 @@ use phonorheos_core::clock;
 use phonorheos_core::core::{Core, Request};
 use phonorheos_core::events::Kind;
 use phonorheos_core::paths;
+use phonorheos_core::voices::VOICES;
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, HashMap, VecDeque};
@@ -22,38 +23,6 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 use tauri::{Emitter, Manager};
 use tauri_plugin_autostart::ManagerExt;
-
-/// Kokoro's English voices; the others need another language's phonemes.
-pub const VOICES: [&str; 28] = [
-    "af_alloy",
-    "af_aoede",
-    "af_bella",
-    "af_heart",
-    "af_jessica",
-    "af_kore",
-    "af_nicole",
-    "af_nova",
-    "af_river",
-    "af_sarah",
-    "af_sky",
-    "am_adam",
-    "am_echo",
-    "am_eric",
-    "am_fenrir",
-    "am_liam",
-    "am_michael",
-    "am_onyx",
-    "am_puck",
-    "am_santa",
-    "bf_alice",
-    "bf_emma",
-    "bf_isabella",
-    "bf_lily",
-    "bm_daniel",
-    "bm_fable",
-    "bm_george",
-    "bm_lewis",
-];
 
 #[derive(Clone, Serialize)]
 struct Spoken {
@@ -119,6 +88,7 @@ pub fn run() {
             let settings = Settings::load(&paths::settings_path());
             let core = Arc::new(Core::default());
             core.set_tokens(settings.tokens.clone());
+            core.set_default_voice(&settings.voice);
             let helper = Helper::start(
                 Launch {
                     python: python(app),
@@ -262,6 +232,7 @@ fn set_defaults(state: S<'_>, voice: String, speed: f32, by_clause: bool) -> Res
     s.speed = speed;
     s.by_clause = by_clause;
     state.save(&s)?;
+    state.core.set_default_voice(&voice);
     *state.defaults.write().expect("defaults lock") = Defaults {
         voice,
         speed,

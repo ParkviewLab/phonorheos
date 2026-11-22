@@ -55,7 +55,7 @@ From top to bottom, the window shows:
 
 ## Voices and speed
 
-phonorheos offers Kokoro's 28 English voices. A name beginning `bm_` or `bf_` is a British male or female voice, and `am_` or `af_` an American one. `bm_lewis` is the default. Whichever voice speaks, words are pronounced the British way.
+phonorheos offers Kokoro's 28 English voices. A name beginning `bm_` or `bf_` is a British male or female voice, and `am_` or `af_` an American one. `bm_lewis` is the default. Whichever voice speaks, words are pronounced the British way. Other apps can ask phonorheos for this list, with each voice's accent and gender and the one chosen in the window, so that they can offer the same voices in their own settings.
 
 The speed runs from 0.5 (half) to 2 (double). The voice and speed in the window apply to any text that does not name its own; an app may name a voice and a speed for each piece it sends.
 

@@ -15,6 +15,8 @@
 //! - `DELETE /speak/{id}` → 204, or 404
 //! - `POST /stop` → `{"stopped": n}`
 //! - `GET /events?item=&client=&last_id=` (or `Last-Event-ID`) → Server-Sent Events
+//! - `GET /voices` → `{"default", "voices": [{"id", "name", "accent", "gender", "default"}]}`:
+//!   the voices an item may name, with the one that speaks text naming none marked
 //! - `GET /queue`, `GET /status`, `GET /health`
 //! - `POST /mcp`: the Model Context Protocol, with the tools `say` and `stop` (see `mcp`)
 
@@ -84,6 +86,7 @@ pub fn router(core: Arc<Core>, source: Source) -> Router {
         .route("/events", get(events))
         .route("/queue", get(queue))
         .route("/status", get(status))
+        .route("/voices", get(voices))
         .route("/health", get(|| async { "ok" }))
         .route("/mcp", post_service(crate::mcp::service(ctx.core.clone())))
         .layer(middleware::from_fn_with_state(ctx.clone(), check))
@@ -277,10 +280,20 @@ async fn status(State(ctx): State<Ctx>) -> Response {
         "name": "phonorheos",
         "version": crate::version(),
         "voice": ctx.core.voice(),
+        "default_voice": ctx.core.default_voice(),
         "speaking": items.iter().find(|i| i.state == crate::queue::State::Speaking),
         "queued": items.iter().filter(|i| i.state == crate::queue::State::Queued).count(),
         "muted": ctx.core.muted(),
         "readers": ctx.core.readers(),
+    }))
+    .into_response()
+}
+
+async fn voices(State(ctx): State<Ctx>) -> Response {
+    let default = ctx.core.default_voice();
+    Json(json!({
+        "voices": crate::voices::all(&default),
+        "default": default,
     }))
     .into_response()
 }

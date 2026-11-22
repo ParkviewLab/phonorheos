@@ -42,7 +42,7 @@ The window shows:
 - **clients:** the apps reading the event stream;
 - **recently spoken:** the last 50 pieces, with who sent them, and whether each was cancelled or failed.
 
-The voices are Kokoro's 28 English voices: `bm_` and `bf_` are British male and female, `am_` and `af_` American. `bm_lewis` is the default. Text is pronounced the British way whichever voice speaks it. The window offers only these; an item that names another voice through the interface fails.
+The voices are Kokoro's 28 English voices: `bm_` and `bf_` are British male and female, `am_` and `af_` American. `bm_lewis` is the default. Text is pronounced the British way whichever voice speaks it. The window offers only these, and `GET /voices` lists them for other apps; an item that names another voice through the interface fails.
 
 In **Settings**:
 
@@ -68,7 +68,8 @@ phonorheos serves HTTP/1.1 on:
 | `POST /stop` | Silences everything: `{"stopped": n}`. |
 | `GET /events?item=<id>&client=<name>&last_id=<n>` | The events, as Server-Sent Events, optionally only one item's or one client's. A reconnecting client sends `Last-Event-ID` (or `?last_id=`) and is sent what it missed, while it is among the last 1000 events. A comment line every 15 s keeps the connection alive. The events of an item made only to be kept carry `"speak": false`, and it has no `started` event. |
 | `POST /mcp` | The Model Context Protocol (stateless, JSON replies), with two tools: `say` (`text`, and optionally `voice`, `speed`, `speak` and `cache`), which queues the text as `POST /speak` does and returns `{"id", "ahead", "muted"}` at once, and `stop`. Behind the same rules as every other endpoint, tokens included on the LAN. |
-| `GET /queue`, `GET /status`, `GET /health` | The queue; the voice's state, what is speaking, whether the app is muted, the readers and the version; whether it is up. |
+| `GET /voices` | The voices an item may name: `{"default": "bm_lewis", "voices": [{"id": "bf_emma", "name": "Emma", "accent": "british", "gender": "female", "default": false}, …]}`, the 28 in the window's order. `accent` is `british` or `american` and `gender` `female` or `male`; `default` marks the voice chosen in the window, which speaks text that names none, and is named again at the top. |
+| `GET /queue`, `GET /status`, `GET /health` | The queue; the voice's state, the voice for text that names none (`default_voice`), what is speaking, whether the app is muted, the readers and the version; whether it is up. |
 
 Each item's events are `queued` (with its `text`), `started` (its first sound has been sent to the speakers), and one of `finished` (spoken to the end), `cancelled` (with a `reason`: withdrawn, stopped, or stopped while speaking) or `failed` (with a `reason`). Every event has its `id`, the `item`, the `client` and the time (`at`), and the `voice` where the item named one. An event:
 
